@@ -1,4 +1,4 @@
-/* Copyright 2023 The TensorFlow Authors. All Rights Reserved.
+/* Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef TENSORFLOW_LITE_DELEGATES_OPENVINO_DELEGATE_H_
-#define TENSORFLOW_LITE_DELEGATES_OPENVINO_DELEGATE_H_
+#ifndef TENSORFLOW_LITE_DELEGATES_OPENVINO_OPENVINO_DELEGATE_H_
+#define TENSORFLOW_LITE_DELEGATES_OPENVINO_OPENVINO_DELEGATE_H_
 
 #include "tensorflow/lite/c/common.h"
 
@@ -22,22 +22,43 @@ limitations under the License.
 extern "C" {
 #endif  // __cplusplus
 
+// Enable OPENVINO acceleration for signed quantized 8-bit inference.
+// This includes operators with channel-wise quantized weights.
+#define TFLITE_OPENVINO_DELEGATE_FLAG_QS8 0x00000001
+// Enable OPENVINO acceleration for unsigned quantized 8-bit inference.
+#define TFLITE_OPENVINO_DELEGATE_FLAG_QU8 0x00000002
+// Force FP16 inference for FP32 operators.
+#define TFLITE_OPENVINO_DELEGATE_FLAG_FORCE_FP16 0x00000004
+
 typedef struct {
-  uint32_t devicePreference;
-  uint32_t powerPreference;
+  // Number of threads to use in the thread pool.
+  // 0 or negative value means no thread pool used.
+  int32_t num_threads;
+  // Bitfield with any combination of the following binary options:
+  // - TFLITE_OPENVINO_DELEGATE_FLAG_QS8
+  // - TFLITE_OPENVINO_DELEGATE_FLAG_QU8
+  // - TFLITE_OPENVINO_DELEGATE_FLAG_FORCE_FP16
+  uint32_t flags;
+  int32_t device_type;
+  int32_t performance_hint;
+  // Cache for packed weights, can be shared between multiple instances of
+  // delegates.
 } TfLiteOpenVINODelegateOptions;
 
-// Returns a str1ucture with the default OpenVINO delegate options.
-TfLiteOpenVINODelegateOptions TfLiteOpenVINODelegateOptionsDefault();
+// Returns a structure with the default OpenVINO delegate options.
+TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptions
+TfLiteOpenVINODelegateOptionsDefault();
 
 // Creates a new delegate instance that need to be destroyed with
 // `TfLiteOpenVINODelegateDelete` when delegate is no longer used by TFLite.
-// When `options` is set to `nullptr`, the following default values are used:
-TfLiteDelegate* TfLiteOpenVINODelegateCreate(
+// When `options` is set to `nullptr`, default values are used (see
+// implementation of TfLiteOpenVINODelegateOptionsDefault in the .cc file for
+// details).
+TFL_CAPI_EXPORT TfLiteDelegate* TfLiteOpenVINODelegateCreate(
     const TfLiteOpenVINODelegateOptions* options);
 
 // Destroys a delegate created with `TfLiteOpenVINODelegateCreate` call.
-void TfLiteOpenVINODelegateDelete(TfLiteDelegate* delegate);
+TFL_CAPI_EXPORT void TfLiteOpenVINODelegateDelete(TfLiteDelegate* delegate);
 
 #ifdef __cplusplus
 }
