@@ -90,20 +90,6 @@ class Delegate {
       kTfLiteDelegateFlagsNone,       // .flags
   };
 
-  // Unpacked data for quasi-static tensors, i.e. tensors produced by
-  // dequantizing or unpacking static buffers.
-  std::vector<char> static_unpacked_data_;
-  // Mapping from a tensor index for a quasi-static tensor to the offset to
-  // its unpacked data within static_unpacked_data_.
-  std::unordered_map<int, size_t> static_unpacked_data_map_;
-  // Set of indices of nodes which unpack static data, e.g. Dequantize
-  // operators which convert FP16 static weights to FP32. These nodes are simply
-  // ignored in the delegate implementation, because their outputs are
-  // pre-unpacked in DelegatePrepare.
-  std::unordered_set<int> static_unpack_nodes_;
-  // Set of indices of tensors with unpacked static sparse weights.
-  std::unordered_set<int> static_sparse_weights_;
-
   TfLiteOpenVINODelegateOptions options_;
 };
 
@@ -112,6 +98,50 @@ void addInputParams(const TfLiteContext* context, const int index) {
     std::vector<size_t> dims(t.dims->data[0], t.dims->data[NumDimensions[&t]]);
     auto input = std::make_shared<ov::opset3::Parameter>(ov::element::f32, ov::Shape(dims.begin(), dims.end()));
     inputParams.insert(input);
+    ngraphNodes->setOutputAtOperandIndex(index, input);
+}
+
+class NgraphNodes {
+ private:
+    std::vector<ov::Output<ov::Node>> outputAtOperandIndex;
+ public:
+    //REVISIT: Decide on the data type of index passed in these calls
+    void setOutputAtOperandIndex(int index, ov::Output<ov::Node> output);
+    ov::Output<ov::Node> getOperationOutput(int index);
+    ov::Output<ov::Node> getInputNode(int index);
+    template <typename T>
+    std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType, ov::Shape shape,
+		                              const void* data) {
+	    return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
+    }
+}
+
+void NgraphNodes::setOutputAtOperandIndex(int index, ov::Output<ov::Node> output) {
+    outputAtOperandIndex[index] = output;
+}
+
+ov::Output<ov::Node> NgraphNodes::getOperationOutput(int index) {
+    return outputAtOperandIndex[index];
+}
+
+ov::Output<ov::Node> NgraphNodes::getInputNode(TfLiteTensor& tensor, int node_index, int in_index) {
+    std::shared_ptr<ov::Node> input;
+    if (tensor.type == kTfLiteFloat32) {
+       ov::element::Type elementType;
+       if(tensor.allocation_type == kTfLiteMmapRo) {
+           const void* data = tensor.data.raw_const;
+	   //REVISIT : add support for other data types
+           elementType = ov::element::f32;
+	   std::vector tensor_shape;
+           for (int i = 0; i < tensor.dims->size; i++)
+               tensor_shape.insert(tensor.dims->data[i]);
+	   input = createConstNode(elementType, tensor_shape, data);
+       }
+    } else {
+        input = getOperationOutput(node_index);
+    }
+
+    return input;
 }
 
 class Subgraph {
@@ -126,11 +156,7 @@ class Subgraph {
     std::unordered_set<int> outputs;
     for (int o = 0; o < params->output_tensors->size; o++) {
       const int output_tensor_idx = params->output_tensors->data[o];
-      // Exclude quasi-static tensors which may have become subgraph outputs
-      // after partitioning.
-      if (delegate.static_unpacked_data_map_.count(output_tensor_idx) == 0) {
-        outputs.insert(output_tensor_idx);
-      }
+      outputs.insert(output_tensor_idx);
     }
     std::unordered_set<int> externals(outputs);
 
@@ -142,8 +168,6 @@ class Subgraph {
       return nullptr;
     }
 
-
-    //TODO: Create Ngraph network creator object
 
     // Detect which tensors are used as inputs or outputs of any subgraph nodes.
     // -1 denotes tensor not used in the subgraph. These indexes will be
@@ -207,13 +231,6 @@ class Subgraph {
                   tensors.end());
     std::sort(tensors.begin(), tensors.end());
 
-    // REVISIT:  OpenVINO Value IDs for TFLite tensors
-
-      //TODO: define OV specific tensors
-
-    // Create a set of quasi-static tensors for VisitNode function
-    std::unordered_set<int> quasi_static_tensors;
-
     // Create ngraph nodes for TFLite delegate nodes
     for (int i = 0; i < params->nodes_to_replace->size; i++) {
       const int node_index = params->nodes_to_replace->data[i];
@@ -226,15 +243,14 @@ class Subgraph {
       }
 
       if (VisitNode(delegate, context, registration, node,
-                    node_index, quasi_static_tensors,
-                    false) != kTfLiteOk) {
+                    node_index, false) != kTfLiteOk) {
         return nullptr;
       }
     }
 
     //TODO REVISIT: Set Result Nodes 
     ov::Core ie(std::string("/usr/local/lib64/plugins.xml"));
-    std::shared_ptr<ov::Model> model = std::make_shared<ov::Model>(mResultNodes, inputParams);
+    std::shared_ptr<ov::Model> model = std::make_shared<ov::Model>(resultNodes, inputParams);
     ov::CompiledModel compiled_model;
     std::string deviceStr = "VPU";
 
@@ -249,6 +265,8 @@ class Subgraph {
 	manager.run_passes(mNetwork);
     }
 
+    inferRequest = compiled_model.create_infer_request();
+
     //TODO REVISIT: replaced runtime_ptr with ngraph graph object
     return new Subgraph(delegate, model, externals);
   }
@@ -256,9 +274,9 @@ class Subgraph {
   TfLiteStatus Prepare(TfLiteContext* context) { return kTfLiteOk; }
 
   TfLiteStatus Invoke(TfLiteContext* context) {
-    //TODO: Create infer request on mNetwork(compiled model)
-
-    //TODO: execute infer() on the infer request
+    //TODO: Process inputs
+    inferRequest.start_async();
+    //TODO: Process outputs
 
     return kTfLiteOk;
   }
@@ -385,7 +403,6 @@ class Subgraph {
   static TfLiteStatus VisitNode(
       const Delegate& delegate, TfLiteContext* context,
       TfLiteRegistration* registration, TfLiteNode* node, int node_index,
-      const std::unordered_set<int>& quasi_static_tensors,
       const bool detect_supported_op) {
     // TFLite context used for logging purposes. When we create a new node
     // (subgraph is non-null), logging context is the same as context, and error
@@ -473,17 +490,9 @@ class Subgraph {
             CheckActivation(node_index, add_params->activation));
       }
     } else {
-      auto size_input1 = input1_tensor.dims->size;
-      auto size_input2 = input2_tensor.dims->size;
-      std::vector shape_input1;
-      for (int i = 0; i < size_input1; i++)
-        shape_input1.insert(input1_tensor.dims->data[i]);
-      for (int i = 0; i < size_input2; i++)
-        shape_input2.insert(input2_tensor.dims->data[i]);
-
       //TODO: implement getInputNode and maintain list of nodes created and current index
-      auto inputNode1 = getInputNode(0);
-      auto inputNode2 = getInputNode(1);
+      auto inputNode1 = getInputNode(context, node_index, input1_tensor, 0);
+      auto inputNode2 = getInputNode(context, node_index, input2_tensor, 1);
       auto addNode = std::make_shared<ov::opset8::Add>(inputNode1, inputNode2, ov::op::AutoBroadcastType::NUMPY);
       auto resultNode = applyActivation(addNode, add_params->Activation);
     }
@@ -500,12 +509,10 @@ class Subgraph {
     }
   }
 
-  // OpenVINO Runtime (subgraph + workspace) with smart-pointer for lifetime
-  // management.
+  std::shared_ptr<NgraphNodes> ngraphNodes;
   std::shared_ptr<ov::Model> model_;
-  // Mapping from TFLite Tensor IDs (same as OpenVINO Value IDs) for
-  // input/output tensors in the delegated subgraph to their data locations.
   std::unordered_map<int, void*> externals_;
+  //TODO: Remove if not needed
   // Memory location to use for 0-size extenal tensors, as TFLite init their
   // data pointer to nullptr, and OpenVINO requires valid data pointers.
   char dummy_data_{0};
@@ -513,14 +520,11 @@ class Subgraph {
   void addResultNode(const TfLiteContext* context, const int index);
   std::vector<std::make_shared<ov::opset3::Parameter>> inputParams;
   std::vector<<std::make_shared<ov::Node>> resultNodes;
+  ov::InferRequest inferRequest;
 };
 
 TfLiteIntArray* Delegate::PrepareOpsToDelegate(TfLiteContext* context) {
-  // Clear previous data, in case the delegate is reused without re-creation.
-  static_unpacked_data_map_.clear();
-  static_unpacked_data_.clear();
-  static_unpack_nodes_.clear();
-  static_sparse_weights_.clear();
+  //TODO: Clear previous data, in case the delegate is reused without re-creation.
 
   TfLiteIntArray* execution_plan = nullptr;
   if (context->GetExecutionPlan(context, &execution_plan) != kTfLiteOk) {
@@ -547,8 +551,7 @@ TfLiteIntArray* Delegate::PrepareOpsToDelegate(TfLiteContext* context) {
 
 
     if (Subgraph::VisitNode(/*delegate=*/*this, context,
-                            registration, node, node_index,
-                            null, true) != kTfLiteOk) {
+                            registration, node, node_index, true) != kTfLiteOk) {
       continue;
     }
 
