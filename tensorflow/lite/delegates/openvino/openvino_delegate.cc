@@ -93,23 +93,14 @@ class Delegate {
   TfLiteOpenVINODelegateOptions options_;
 };
 
-void addInputParams(const TfLiteContext* context, const int index) {
-    const TfLiteTensor t = context->tensors[index];
-    std::vector<size_t> dims(t.dims->data[0], t.dims->data[NumDimensions[&t]]);
-    auto input = std::make_shared<ov::opset3::Parameter>(ov::element::f32, ov::Shape(dims.begin(), dims.end()));
-    inputParams.insert(input);
-    ngraphNodes->setOutputAtOperandIndex(index, input);
-}
-
 class NgraphNodes {
  private:
-    std::vector<ov::Output<ov::Node>> outputAtOperandIndex;
+    std::vector<ov::Output<ov::Node>> outputAtOperandIndex = {};
  public:
     //REVISIT: Decide on the data type of index passed in these calls
     void setOutputAtOperandIndex(int index, ov::Output<ov::Node> output);
     ov::Output<ov::Node> getOperationOutput(int index);
-    ov::Output<ov::Node> getInputNode(int index);
-    template <typename T>
+    ov::Output<ov::Node> getInputNode(TfLiteTensor& tensor, int tensor_index);
     std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType, ov::Shape shape,
 		                              const void* data) {
 	    return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
@@ -124,7 +115,7 @@ ov::Output<ov::Node> NgraphNodes::getOperationOutput(int index) {
     return outputAtOperandIndex[index];
 }
 
-ov::Output<ov::Node> NgraphNodes::getInputNode(TfLiteTensor& tensor, int node_index, int in_index) {
+ov::Output<ov::Node> NgraphNodes::getInputNode(TfLiteTensor& tensor, int tensor_index) {
     std::shared_ptr<ov::Node> input;
     if (tensor.type == kTfLiteFloat32) {
        ov::element::Type elementType;
@@ -138,10 +129,18 @@ ov::Output<ov::Node> NgraphNodes::getInputNode(TfLiteTensor& tensor, int node_in
 	   input = createConstNode(elementType, tensor_shape, data);
        }
     } else {
-        input = getOperationOutput(node_index);
+        input = getOperationOutput(tensor_index);
     }
 
     return input;
+}
+
+void addInputParams(const TfLiteContext* context, const int index) {
+    const TfLiteTensor t = context->tensors[index];
+    std::vector<size_t> dims(t.dims->data[0], t.dims->data[NumDimensions[&t]]);
+    auto input = std::make_shared<ov::opset3::Parameter>(ov::element::f32, ov::Shape(dims.begin(), dims.end()));
+    inputParams.insert(input);
+    ngraphNodes->setOutputAtOperandIndex(index, input);
 }
 
 class Subgraph {
@@ -248,11 +247,16 @@ class Subgraph {
       }
     }
 
+    for(int i = 0; i <= node->outputs->size; i++) {
+        const int t = node->outputs->data[i];
+	resultNodes.insert(getOperationOutput(t));
+    }
+
     //TODO REVISIT: Set Result Nodes 
     ov::Core ie(std::string("/usr/local/lib64/plugins.xml"));
     std::shared_ptr<ov::Model> model = std::make_shared<ov::Model>(resultNodes, inputParams);
     ov::CompiledModel compiled_model;
-    std::string deviceStr = "VPU";
+    std::string deviceStr = "NPU";
 
     //TODO: get device string from flags
     if(model) {
@@ -491,10 +495,11 @@ class Subgraph {
       }
     } else {
       //TODO: implement getInputNode and maintain list of nodes created and current index
-      auto inputNode1 = getInputNode(context, node_index, input1_tensor, 0);
-      auto inputNode2 = getInputNode(context, node_index, input2_tensor, 1);
+      auto inputNode1 = ngraphNodes->getInputNode(input1_tensor, node->inputs->data[0]);
+      auto inputNode2 = ngraphNodes->getInputNode(input2_tensor, node->inputs->data[0]);
       auto addNode = std::make_shared<ov::opset8::Add>(inputNode1, inputNode2, ov::op::AutoBroadcastType::NUMPY);
       auto resultNode = applyActivation(addNode, add_params->Activation);
+      ngraphNodes->setOutputAtOperandIndex(node->outputs->data[0], resultNode);
     }
 
     return TfLiteOk;
