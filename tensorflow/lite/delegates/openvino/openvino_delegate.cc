@@ -27,8 +27,8 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
-//TODO add openvino specific headers
-//#include "xnnpack.h"  // from @XNNPACK
+#include <openvino/openvino.hpp>
+#include <openvino/pass/serialize.hpp>
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/builtin_op_data.h"
 #include "tensorflow/lite/c/common.h"
@@ -157,8 +157,6 @@ class Subgraph {
       const int output_tensor_idx = params->output_tensors->data[o];
       outputs.insert(output_tensor_idx);
     }
-    std::unordered_set<int> externals(outputs);
-
     for (auto i = inputs.begin(); i != inputs.end(); i++)
         addInputParams(context, i);
 
@@ -230,6 +228,18 @@ class Subgraph {
                   tensors.end());
     std::sort(tensors.begin(), tensors.end());
 
+    std::unordered_set<int> compute_inputs;
+    for(int t : tensors) {
+	void* data == nullptr;
+        if(context->tensors[t].allocation_type !== kTfLiteMmapRo) {
+            data = context->tensors[t].data.raw_const;
+        }
+	if(inputs.count(t) != 0) {
+            if(data == nullptr)
+                compute_inputs.insert(t);
+	}
+    }
+
     // Create ngraph nodes for TFLite delegate nodes
     for (int i = 0; i < params->nodes_to_replace->size; i++) {
       const int node_index = params->nodes_to_replace->data[i];
@@ -271,16 +281,29 @@ class Subgraph {
 
     inferRequest = compiled_model.create_infer_request();
 
-    //TODO REVISIT: replaced runtime_ptr with ngraph graph object
-    return new Subgraph(delegate, model, externals);
+    return new Subgraph(delegate, model, compute_inputs, outputs);
   }
 
   TfLiteStatus Prepare(TfLiteContext* context) { return kTfLiteOk; }
 
   TfLiteStatus Invoke(TfLiteContext* context) {
-    //TODO: Process inputs
+    size_t i = 0;
+    for (int t : graph_inputs_) {
+        ov::Tensor inputBlob = inferRequest.get_input_tensor(i++);
+	uint8_t* dest = (uint8_t*)destBlob.data<float>();
+	auto len = context->tensors[t].bytes;
+	void* srcPtr = context->tensors[t].data.data;
+	std::memcpy((uint8_t*)dest, (uint8_t*)srcPtr, len);
+    }
     inferRequest.start_async();
-    //TODO: Process outputs
+    size_t o = 0;
+    for (t : graph_outputs_) {
+        ov::Tensor outputBlob = inferRequest.get_output_tensor(o++);
+	void* srcPtr = context->tensors[t].data.data;
+	uint8_t* dest = (uint8_t*)outputBlob.data<float>();
+	auto len = context->tensors[t].bytes;
+	std::memcpy((void*)srcPtr, (void*) dest, len);
+    }
 
     return kTfLiteOk;
   }
@@ -310,9 +333,8 @@ class Subgraph {
       case kTfLiteActReluN1To1:
       case kTfLiteActRelu6:
         return kTfLiteOk;
-	//TODO: Check for this in openvino spec
       case kTfLiteActTanh:
-//        return CheckWebNNOpSupport(builder, "tanh");
+        return kTfLiteOk;
       case kTfLiteActSignBit:
         TFLITE_LOG_PROD(tflite::TFLITE_LOG_WARNING,
             "unsupported fused activation (Sign) in node #%d",
@@ -428,7 +450,6 @@ class Subgraph {
     }
   }
 
-  //TODO: check if return type is required
   std::shared_ptr<ov::Node> applyActivation(std::shared_ptr<ov::Node> input, TfLiteFusedActivation activation) {
     switch (activation) {
       case kTfLiteActNone:
@@ -438,10 +459,8 @@ class Subgraph {
       case kTfLiteActReluN1To1:
       case kTfLiteActRelu6:
         return std::make_shared<ov::opset3::Clamp>(input);
-	//TODO: Check for this in openvino spec
       case kTfLiteActTanh:
         return std::make_shared<ov::opset3::Tanh>(input)
-//        return CheckWebNNOpSupport(builder, "tanh");
       case kTfLiteActSignBit:
         TFLITE_LOG_PROD(tflite::TFLITE_LOG_WARNING,
             "unsupported fused activation (Sign) in node #%d",
@@ -494,7 +513,6 @@ class Subgraph {
             CheckActivation(node_index, add_params->activation));
       }
     } else {
-      //TODO: implement getInputNode and maintain list of nodes created and current index
       auto inputNode1 = ngraphNodes->getInputNode(input1_tensor, node->inputs->data[0]);
       auto inputNode2 = ngraphNodes->getInputNode(input2_tensor, node->inputs->data[0]);
       auto addNode = std::make_shared<ov::opset8::Add>(inputNode1, inputNode2, ov::op::AutoBroadcastType::NUMPY);
@@ -507,16 +525,20 @@ class Subgraph {
 
  private:
   Subgraph(const Delegate& delegate, const std::shared_ptr<const ov::Model>& model,
-           const std::unordered_set<int>& externals)
-      : model_(model) {
-    for (int t : externals) {
-      externals_[t] = nullptr;
+           const std::unordered_set<int>& graph_inputs,
+           const std::unordered_set<int>& graph_outputs)
+      : model_(model),
+        graph_inputs_(graph_inputs),
+        graph_outputs_(graph_outputs) {
+    for (int t : graph_outputs) {
+        graph_outputs_[t] = nullptr;
     }
   }
 
   std::shared_ptr<NgraphNodes> ngraphNodes;
   std::shared_ptr<ov::Model> model_;
-  std::unordered_map<int, void*> externals_;
+  std::unordered_map<int, void*> graph_outputs_;
+  std::unordered_map<int, void*> graph_inputs_;
   //TODO: Remove if not needed
   // Memory location to use for 0-size extenal tensors, as TFLite init their
   // data pointer to nullptr, and OpenVINO requires valid data pointers.
