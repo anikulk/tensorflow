@@ -1,76 +1,40 @@
-#include <ie_cnn_network.h>
-#include "openvino/runtime/core.hpp"
 
-#include "tensorflow/lite/delegates/utils/simple_delegate.h"
-#include "tensorflow/lite/builtin_ops.h"
-#include "openvino_delegate.h"
+#include "openvino_delegate_kernel.h"
 
 namespace tflite {
 namespace openvinodelegate {
-class OpenVINODelegate : public SimpleDelegateInterface {
-    public:
-    explicit OpenVINODelegate(TfLiteOpenVINODelegateOptions& options) {
-        debug_level = options.debug_level;
-        plugin_path = options.plugins_path;
-        /* device_type = options.device_type; */
-    }
-
-    bool IsNodeSupportedByDelegate(const TfLiteRegistration* registration,
-                                         const TfLiteNode* node,
-                                         TfLiteContext* context) const override {
-        if(registration->builtin_code == kTfLiteBuiltinConv2d) {
-            return true;
+class OpenVINODelegateKernel : public SimpleDelegateKernelInterface {
+  TfLiteStatus Init(TfLiteContext* context,
+                            const TfLiteDelegateParams* params) override {
+        for (int i = 0; i < params->nodes_to_replace->size; i++) {
+            const int node_id = params->nodes_to_replace->data[i];
+            TfLiteNode* delegate_node;
+            TfLiteRegistration* delegate_node_registration;
+            GetNodeAndRegistration(context, node_id, &delegate_node, 
+                                    &delegate_node_registration);
+            std::vector<int> node_inputs;
+            node_inputs.resize(delegate_node->inputs->size);
+            for (int j = 0; j < delegate_node->size; j++) {
+                node_inputs.pushback(delegate_node->data[j]);
+            }
+            input_index_map.insert(std::pair(i, node_inputs));
         }
-        else {
-            return false;
-        }
-    }
+  }
 
-    TfLiteStatus Initialize(TfLiteContext* context) override {
-        std::shared_ptr<ov::Model> mNetwork;
-        ov::Core ie("/usr/local/lib64/plugins.xml");
-    }
+  TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) override {
 
-    const char* Name() const override {
-        return "OpenVINO SimpleDelegate";
-    }
+  }
 
-    std::unique_ptr<SimpleDelegateKernelInterface>
-                    CreateDelegateKernelInterface() override {
-        return std::unique_ptr<SimpleDelegateKernelInterface>();
-    }
+  TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) override {
 
-    SimpleDelegateInterface::Options DelegateOptions() const override {
-        auto options = SimpleDelegateInterface::Options();
-        options.min_nodes_per_partition = 1;
-        options.max_delegated_partitions = 2;
-    }
-    private:
-        char* plugin_path;
-        int debug_level;
-        //std::string device_type;
+  }
+
+  // Map with graph node index as key and vector of input indices at node in key. 
+  std::map<int, std::vector<int>> input_index_map;
+
+  // Map with graph node index as key and vector of output indices at node in key. 
+  std::map<int, std::vector<int>> output_index_map;
 
 };
-
-TfLiteDelegate* TfLiteCreateOpenVINODelegate(TfLiteOpenVINODelegateOptions& options) {
-    auto ovdelegate_ = std::make_unique<OpenVINODelegate>(options);
-    /* auto delegate = new TfLiteDelegate();
-    delegate->Prepare = &DelegatePrepare;
-    delegate->flags = flag;
-    delegate->CopyFromBufferHandle = nullptr;
-    delegate->CopyToBufferHandle = nullptr;
-    delegate->FreeBufferHandle = nullptr;
-    delegate->data_ = simple_delegate.release();
-    return delegate; */
-}
-
-void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteDelegate* delegate) {
-    return;
-}
-
-TfLiteOpenVINODelegateOptions TfLiteOpenVINODelegateOptionsDefault() {
-    TfLiteOpenVINODelegateOptions result{0};
-    return result;
-}
 }
 }
