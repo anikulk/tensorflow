@@ -38,6 +38,9 @@ limitations under the License.
 #if !defined(__s390x__) && !defined(TFLITE_WITHOUT_XNNPACK)
 #include "tensorflow/lite/delegates/xnnpack/xnnpack_delegate.h"
 #endif
+#ifdef TFLITE_ENABLE_OPENVINO
+#include "tensorflow/lite/delegates/openvino/openvino_delegate.h"
+#endif
 
 #include "tensorflow/lite/c/common.h"
 
@@ -89,6 +92,11 @@ TfLiteDelegatePtr CreateXNNPACKDelegate(
     const TfLiteXNNPackDelegateOptions* options);
 #endif
 TfLiteDelegatePtr CreateXNNPACKDelegate(int num_threads);
+#ifdef TFLITE_ENABLE_OPENVINO
+TfLiteDelegatePtr CreateOPENVINODelegate();
+TfLiteDelegatePtr CreateOPENVINODelegate(
+    const TfLiteOpenVINODelegateOptions* openvino_options);
+#endif
 }  // namespace evaluation
 }  // namespace tflite
 

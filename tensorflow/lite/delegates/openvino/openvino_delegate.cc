@@ -9,20 +9,26 @@ namespace tflite {
 namespace openvinodelegate {
 class OpenVINODelegate : public SimpleDelegateInterface {
     public:
-    explicit OpenVINODelegate(TfLiteOpenVINODelegateOptions& options)
-        : options_(options) {
-        if (options_ == nullptr)
-            options = TfLiteOpenVINODelegateOptionsDefault();
-        }
+    explicit OpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
+        debug_level = options->debug_level;
+        plugin_path = options->plugins_path;
+        /* device_type = options.device_type; */
+    }
 
     bool IsNodeSupportedByDelegate(const TfLiteRegistration* registration,
                                          const TfLiteNode* node,
                                          TfLiteContext* context) const override {
-        return CheckNodeSupportByOpenVINO(registration, node, context);
+        if(registration->builtin_code == kTfLiteBuiltinConv2d) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     TfLiteStatus Initialize(TfLiteContext* context) override {
-        return kTfLiteOk;
+        std::shared_ptr<ov::Model> mNetwork;
+        ov::Core ie("/usr/local/lib64/plugins.xml");
     }
 
     const char* Name() const override {
@@ -31,7 +37,7 @@ class OpenVINODelegate : public SimpleDelegateInterface {
 
     std::unique_ptr<SimpleDelegateKernelInterface>
                     CreateDelegateKernelInterface() override {
-        return std::unique_ptr<OpenVINODelegateKernel>(options_);
+        return std::unique_ptr<OpenVINODelegateKernel>();
     }
 
     SimpleDelegateInterface::Options DelegateOptions() const override {
@@ -40,14 +46,16 @@ class OpenVINODelegate : public SimpleDelegateInterface {
         options.max_delegated_partitions = 2;
     }
     private:
-        TfLiteOpenVINODelegateOptions options_;
+        char* plugin_path;
+        int debug_level;
         //std::string device_type;
 
-}; 
+};
+}
+}
 
-TfLiteDelegate* TfLiteCreateOpenVINODelegate(TfLiteOpenVINODelegateOptions& options) {
-    auto ovdelegate_ = std::make_unique<OpenVINODelegate>(options);
-    return tflite::TfLiteDelegateFactory::CreateSimpleDelegate(std::move(ovdelegate_));
+TfLiteDelegate* TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
+    auto ovdelegate_ = std::make_unique<tflite::openvinodelegate::OpenVINODelegate>(options);
     /* auto delegate = new TfLiteDelegate();
     delegate->Prepare = &DelegatePrepare;
     delegate->flags = flag;
@@ -65,6 +73,4 @@ void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteDelegate* delegate) {
 TfLiteOpenVINODelegateOptions TfLiteOpenVINODelegateOptionsDefault() {
     TfLiteOpenVINODelegateOptions result{0};
     return result;
-}
-}
 }
