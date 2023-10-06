@@ -23,14 +23,14 @@ exports_files([
 cc_library(
     name = "openvino_delegate",
     srcs = ["openvino_delegate.cc"],
-    hdrs = ["openvino_delegate.h"],
+    hdrs = ["openvino_delegate.h", "openvino_delegate_kernel.h"],
     compatible_with = get_compatible_with_portable(),
     copts = tflite_copts(),
     linkstatic = True,
     deps = [
         "//tensorflow/lite:kernel_api",
-        "//tensorflow/lite:minimal_logging",
-        "//tensorflow/lite/tools:logging",
+#        "//tensorflow/lite:minimal_logging",
+#        "//tensorflow/lite/tools:logging",
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/kernels:padding",
         "//tensorflow/lite/kernels/internal:compatibility",
@@ -52,7 +52,8 @@ cc_binary(
         ":openvino_delegate",
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/tools:command_line_flags",
-        "//tensorflow/lite/tools:logging",
+#        "//tensorflow/lite/tools:logging",
+#        "//tensorflow/lite:minimal_logging",
     ],
 )
 
@@ -74,7 +75,7 @@ cc_library(
     linkstatic = True,
     deps = [
         "//tensorflow/lite:kernel_api",
-        "//tensorflow/lite:minimal_logging",
+#        "//tensorflow/lite:minimal_logging",
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/kernels:padding",
         "//tensorflow/lite/kernels/internal:compatibility",
