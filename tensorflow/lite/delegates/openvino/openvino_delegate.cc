@@ -37,7 +37,7 @@ class OpenVINODelegate : public SimpleDelegateInterface {
 
     std::unique_ptr<SimpleDelegateKernelInterface>
                     CreateDelegateKernelInterface() override {
-        return std::unique_ptr<SimpleDelegateKernelInterface>();
+        return std::unique_ptr<OpenVINODelegateKernel>();
     }
 
     SimpleDelegateInterface::Options DelegateOptions() const override {

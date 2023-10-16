@@ -41,8 +41,8 @@ cc_library(
     copts = tflite_copts(),
     deps = [
         "//tensorflow/lite/c:common",
-        #"//tensorflow/lite/delegates/openvino:openvino_delegate",
-        "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
+        "//tensorflow/lite/delegates/openvino:openvino_delegate",
+        #"//tensorflow/lite/delegates/nnapi:nnapi_delegate",
     ] + select({
         "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
             "//tensorflow/lite/delegates/gpu:delegate",

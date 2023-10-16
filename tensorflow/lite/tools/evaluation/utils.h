@@ -92,7 +92,7 @@ TfLiteDelegatePtr CreateXNNPACKDelegate(
 TfLiteDelegatePtr CreateXNNPACKDelegate(int num_threads);
 TfLiteDelegatePtr CreateOPENVINODelegate();
 TfLiteDelegatePtr CreateOPENVINODelegate(
-    const TfLiteOpenVINODelegateOptions* openvino_options);
+    const tflite::openvinodelegate::TfLiteOpenVINODelegateOptions* openvino_options);
 }  // namespace evaluation
 }  // namespace tflite
 
