@@ -195,10 +195,8 @@ TfLiteDelegatePtr CreateXNNPACKDelegate(int num_threads) {
 }
 #endif
 
-#ifdef TFLITE_ENABLE_OPENVINO
 TfLiteDelegatePtr CreateOPENVINODelegate() {
-  TfLiteOpenVINODelegateOptions openvino_options =
-      TfLiteOpenVINODelegateOptionsDefault();
+  TfLiteOpenVINODelegateOptions openvino_options{0};
   return CreateOPENVINODelegate(&openvino_options);
 }
 
@@ -209,7 +207,6 @@ TfLiteDelegatePtr CreateOPENVINODelegate(
     TfLiteDeleteOpenVINODelegate(delegate);
   });
 }
-#endif
 
 
 }  // namespace evaluation
