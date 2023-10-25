@@ -47,13 +47,13 @@ cc_library_with_tflite(
         ":delegate_provider_lib",
     ],
     deps = [
-        ":coreml_delegate_provider",
-        ":default_execution_provider",
-        ":external_delegate_provider",
-        ":gpu_delegate_provider",
-        ":hexagon_delegate_provider",
-        ":nnapi_delegate_provider",
-        "//tensorflow/lite/tools/delegates/experimental/stable_delegate:delegate_provider",
+	":coreml_delegate_provider",
+	":default_execution_provider",
+	":hexagon_delegate_provider",
+    ":external_delegate_provider",
+	":gpu_delegate_provider",
+    ":nnapi_delegate_provider",
+    "//tensorflow/lite/tools/delegates/experimental/stable_delegate:delegate_provider",
     ],
     alwayslink = 1,
 )
@@ -87,10 +87,10 @@ cc_library(
         "//tensorflow/lite/tools/evaluation:utils",
     ] + select({
         "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
-            "//tensorflow/lite/delegates/gpu:delegate",
+        "//tensorflow/lite/delegates/gpu:delegate",
         ],
         "//conditions:default": [],
-    }) + select({
+      }) + select({
         "//tensorflow:ios": [
             "//tensorflow/lite/delegates/gpu:metal_delegate",
         ],
@@ -136,7 +136,7 @@ cc_library(
 cc_library(
     name = "coreml_delegate_provider",
     srcs = ["coreml_delegate_provider.cc"],
-    copts = common_copts + select({
+    copts = common_copts + ["-fexceptions"] + select({
         "//tensorflow:ios": [
             "-xobjective-c++",
         ],
@@ -163,7 +163,7 @@ cc_library(
 cc_library_with_tflite(
     name = "xnnpack_delegate_provider",
     srcs = ["xnnpack_delegate_provider.cc"],
-    copts = tflite_copts(),
+    copts = tflite_copts() + ["-fexceptions"],
     linkstatic = True,
     tflite_deps = [
         ":delegate_provider_hdr",
@@ -172,6 +172,21 @@ cc_library_with_tflite(
     visibility = ["//visibility:public"],
     alwayslink = 1,
 )
+
+cc_library(
+    name = "openvino_delegate_provider",
+    srcs = ["openvino_delegate_provider.cc"],
+    copts = tflite_copts() + ["-fexceptions"],
+    linkstatic = True,
+    visibility = ["//visibility:public"],
+    deps = [
+        ":delegate_provider_hdr",
+       "//tensorflow/lite/delegates/openvino:openvino_delegate",
+        "//tensorflow/lite/tools/evaluation:utils",
+    ],
+    alwayslink = 1,
+)
+
 
 cc_library(
     name = "external_delegate_provider",
