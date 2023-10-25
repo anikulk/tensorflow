@@ -40,9 +40,10 @@ cc_library_with_stable_tflite_abi(
     name = "utils",
     srcs = ["utils.cc"],
     hdrs = ["utils.h"],
-    copts = tflite_copts(),
+    copts = tflite_copts() + ["-fexceptions"],
     non_stable_abi_deps = [
         "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
+        "//tensorflow/lite/delegates/openvino:openvino_delegate",
     ] + select({
         "//tensorflow:ios": [
             "//tensorflow/lite/delegates/coreml:coreml_delegate",
@@ -51,12 +52,12 @@ cc_library_with_stable_tflite_abi(
             "//tensorflow/lite/delegates/coreml:coreml_delegate",
         ],
         "//conditions:default": [],
-    }) + select({
-        "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
-            "//tensorflow/lite/delegates/gpu:delegate",
-        ],
+     }) + select({
+             "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
+	     "//tensorflow/lite/delegates/gpu:delegate",
+	     ],
         "//conditions:default": [],
-    }) + select({
+     }) + select({
         "//tensorflow:arm_any": [
             "//tensorflow/lite/delegates/hexagon:hexagon_delegate",
         ],
@@ -88,7 +89,7 @@ cc_library(
     name = "evaluation_delegate_provider",
     srcs = ["evaluation_delegate_provider.cc"],
     hdrs = ["evaluation_delegate_provider.h"],
-    copts = tflite_copts(),
+    copts = tflite_copts() + ["-fexceptions"],
     deps = [
         ":utils",
         "//tensorflow/lite/tools:command_line_flags",
