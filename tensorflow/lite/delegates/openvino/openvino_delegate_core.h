@@ -17,7 +17,6 @@ class OpenVINODelegateManager {
     plugins_location = plugins_path;
   }
   TfLiteStatus openvino_delegate_init() {
-    std::cout << plugins_location << std::endl;
     std::vector<std::string> ovDevices = openvino_delegate_core.get_available_devices();
     if (std::find(ovDevices.begin(), ovDevices.end(), "CPU") ==
         ovDevices.end()) {
@@ -25,6 +24,14 @@ class OpenVINODelegateManager {
     } else {
       return kTfLiteOk;
     }
+  }
+
+  std::vector<int> getComputeInputs() {
+      return compute_inputs;
+  }
+
+  std::vector<int> getOutputs() {
+	  return outputs;
   }
 
   TfLiteStatus createGraphfromTfLite(TfLiteContext* context,
@@ -38,6 +45,8 @@ class OpenVINODelegateManager {
   std::shared_ptr<ov::Model> model;
   ov::CompiledModel compiled_model;
   std::string deviceStr = "CPU";
+  std::vector<int> compute_inputs;
+  std::vector<int> outputs;
 };
 }  // namespace openvinodelegate
 }  // namespace tflite

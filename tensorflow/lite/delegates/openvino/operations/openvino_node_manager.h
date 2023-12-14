@@ -5,7 +5,7 @@
 
 class NodeManager {
 public:
-    NodeManager(int size) { }
+    NodeManager() { }
     std::shared_ptr<ov::Node> getInterimNodeOutput(int index) {
         auto node = outputAtOperandIndex[index];
 	return node.get_node_shared_ptr();
@@ -15,7 +15,6 @@ public:
     }
 
 private: 
-    //TODO: update vector list to map 
     std::map<int, ov::Output<ov::Node>> outputAtOperandIndex;
 };
 #endif //TENSORFLOW_LITE_DELEGATES_OPENVINO_NODE_MANAGER_H_

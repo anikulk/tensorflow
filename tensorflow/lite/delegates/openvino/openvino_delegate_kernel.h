@@ -34,7 +34,6 @@ class OpenVINODelegateKernel : public SimpleDelegateKernelInterface {
  public:
   explicit OpenVINODelegateKernel()
       : ov_delegate_manager(std::make_unique<OpenVINODelegateManager>("")) {
-    std::string plugin_path = "xyz";
   }
   TfLiteStatus Init(TfLiteContext* context,
                     const TfLiteDelegateParams* params) override;
@@ -46,14 +45,8 @@ class OpenVINODelegateKernel : public SimpleDelegateKernelInterface {
   std::shared_ptr<ov::Node> ApplyActivation(std::shared_ptr<ov::Node> input,
                                             TfLiteFusedActivation activation);
 
-  void addInputParams(const TfLiteContext* context, const int index);
-
  private:
-  std::vector<std::shared_ptr<ov::opset3::Parameter>> inputParams = {};
   std::unique_ptr<OpenVINODelegateManager> ov_delegate_manager;
-
-  std::unordered_set<int> compute_inputs;
-  std::unordered_set<int> outputs;
 };
 
 }  // namespace openvinodelegate

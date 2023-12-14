@@ -9,12 +9,11 @@ TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(
    const std::unordered_set<int> inputs(
       &params->input_tensors->data[0],
       &params->input_tensors->data[params->input_tensors->size]);
-  openvino_graph_builder = std::make_unique<OpenVINOGraphBuilder>(params->input_tensors->size + params->nodes_to_replace->size);
+  openvino_graph_builder = std::make_unique<OpenVINOGraphBuilder>();
 
-  std::unordered_set<int> outputs;
   for (int o = 0; o < params->output_tensors->size; o++) {
     const int output_tensor_idx = params->output_tensors->data[o];
-    outputs.insert(output_tensor_idx);
+    outputs.push_back(output_tensor_idx);
   }
 
   for (int i = 0; i < params->nodes_to_replace->size; i++) {
@@ -41,6 +40,7 @@ TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(
     if (inputs.count(t) != 0) {
       if (data == nullptr) {
         openvino_graph_builder->addInputParams(context, t);
+	compute_inputs.push_back(t);
       }
     }
   }

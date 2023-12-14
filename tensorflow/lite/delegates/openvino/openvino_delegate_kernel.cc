@@ -48,6 +48,7 @@ TfLiteStatus OpenVINODelegateKernel::Prepare(TfLiteContext* context,
 TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteContext* context,
                                           TfLiteNode* node) {
   TFLITE_LOG(INFO) << "inside Eval \n";
+  std::vector<int> compute_inputs = ov_delegate_manager->getComputeInputs();
   size_t i = 0;
   for (int t : compute_inputs) {
     ov::Tensor inputBlob =
@@ -60,6 +61,7 @@ TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteContext* context,
   }
   ov_delegate_manager->inferRequest.start_async();
   ov_delegate_manager->inferRequest.wait_for(std::chrono::milliseconds(10000));
+  std::vector<int> outputs = ov_delegate_manager->getOutputs();
   size_t o = 0;
   for (int t : outputs) {
     ov::Tensor outputBlob = ov_delegate_manager->inferRequest.get_output_tensor(o);

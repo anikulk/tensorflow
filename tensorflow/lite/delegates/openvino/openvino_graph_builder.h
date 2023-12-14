@@ -18,9 +18,8 @@ namespace openvinodelegate {
 
 class OpenVINOGraphBuilder {
  public:
-  OpenVINOGraphBuilder(int size) {
-  // TODO: update later if list of nodes is required    operationNodes.resize(size);
-      nodeManager = std::make_shared<NodeManager>(size + 1 );
+  OpenVINOGraphBuilder() {
+      nodeManager = std::make_shared<NodeManager>();
   }
 
   void addInputParams(const TfLiteContext* context, const int index) {
@@ -36,7 +35,8 @@ class OpenVINOGraphBuilder {
     nodeManager->setOutputAtOperandIndex(index, input);
     inputParams.push_back(input);
   }
-  std::shared_ptr<ov::Node> createConstNode(const TfLiteContext* context, const int index) {
+
+  void createConstNode(const TfLiteContext* context, const int index) {
     const TfLiteTensor t = context->tensors[index];
     std::vector<size_t> dims(t.dims->size);
     for (int i = 0; i < t.dims->size; i++) {
@@ -47,7 +47,7 @@ class OpenVINOGraphBuilder {
     nodeManager->setOutputAtOperandIndex(index, constNode);
   }
 
-  void updateResultNodes(std::unordered_set<int> outputs) {
+  void updateResultNodes(std::vector<int> outputs) {
       for(auto o : outputs) {
          resultNodes.push_back(nodeManager->getInterimNodeOutput(o));
       }
