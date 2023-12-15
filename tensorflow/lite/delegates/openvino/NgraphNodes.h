@@ -21,22 +21,10 @@ limitations under the License.
 #include <openvino/opsets/opset8.hpp>
 #include <vector>
 class NgraphNodes {
-private:
-  std::vector<ov::Output<ov::Node>> outputAtOperandIndex;
+
 
 public:
-  NgraphNodes(int operandsSize) {
-    outputAtOperandIndex.resize(operandsSize + 1);
-  }
-  // REVISIT: Decide on the data type of index passed in these calls
-  void setOutputAtOperandIndex(int index, ov::Output<ov::Node> output);
-  ov::Output<ov::Node> getOperationOutput(int index);
-  std::shared_ptr<ov::Node> getInputNode(const TfLiteTensor &tensor,
-                                         int tensor_index);
-  std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType,
-                                            ov::Shape shape, const void *data) {
-    return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
-  }
+  
 };
 
 #endif

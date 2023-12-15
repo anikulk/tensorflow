@@ -84,7 +84,7 @@ cc_library(
     name = "evaluation_delegate_provider",
     srcs = ["evaluation_delegate_provider.cc"],
     hdrs = ["evaluation_delegate_provider.h"],
-    copts = tflite_copts(),
+    copts = tflite_copts() + ["-fexceptions"],
     deps = [
         ":utils",
         "//tensorflow/lite/tools:command_line_flags",

@@ -14,8 +14,6 @@ limitations under the License.
 ==============================================================================*/
 #ifndef TENSORFLOW_LITE_DELEGATES_OPENVINO_DELEGATE_KERNEL_H_
 #define TENSORFLOW_LITE_DELEGATES_OPENVINO_DELEGATE_KERNEL_H_
-#include "tensorflow/lite/c/common.h"
-#include <ie_cnn_network.h>
 #include <map>
 #include <openvino/openvino.hpp>
 #include <openvino/opsets/opset3.hpp>
@@ -24,47 +22,33 @@ limitations under the License.
 #include <openvino/runtime/core.hpp>
 #include <vector>
 
-#include "NgraphNodes.h"
-#include "ov_utils.h"
+#include "openvino_delegate_core.h"
 #include "tensorflow/lite/builtin_ops.h"
+#include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/delegates/utils/simple_delegate.h"
 #include "tensorflow/lite/tools/logging.h"
 
 namespace tflite {
 namespace openvinodelegate {
 class OpenVINODelegateKernel : public SimpleDelegateKernelInterface {
-public:
-  explicit OpenVINODelegateKernel() {}
-  TfLiteStatus Init(TfLiteContext *context,
-                    const TfLiteDelegateParams *params) override;
+ public:
+  explicit OpenVINODelegateKernel()
+      : ov_delegate_manager(std::make_unique<OpenVINODelegateManager>("")) {
+  }
+  TfLiteStatus Init(TfLiteContext* context,
+                    const TfLiteDelegateParams* params) override;
 
-  TfLiteStatus Prepare(TfLiteContext *context, TfLiteNode *node) override;
+  TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) override;
 
-  TfLiteStatus Eval(TfLiteContext *context, TfLiteNode *node) override;
-
-  TfLiteStatus CreateAddNode(TfLiteContext *context, int node_index,
-                             TfLiteNode *node, const TfLiteTensor *tensors,
-                             const TfLiteAddParams *add_params);
-
-  TfLiteStatus CreateNode(TfLiteContext *context,
-                          TfLiteRegistration *registration, TfLiteNode *node,
-                          int node_index);
+  TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) override;
 
   std::shared_ptr<ov::Node> ApplyActivation(std::shared_ptr<ov::Node> input,
                                             TfLiteFusedActivation activation);
 
-  void addInputParams(const TfLiteContext *context, const int index);
-
-private:
-  NgraphNodes *ngraphNodes;
-  std::vector<std::shared_ptr<ov::opset3::Parameter>> inputParams = {};
-  std::vector<std::shared_ptr<ov::Node>> resultNodes = {};
-  std::shared_ptr<ov::Node> resultNode;
-  ov::InferRequest inferRequest;
-  std::unordered_set<int> compute_inputs;
-  std::unordered_set<int> outputs;
+ private:
+  std::unique_ptr<OpenVINODelegateManager> ov_delegate_manager;
 };
 
-} // namespace openvinodelegate
-} // namespace tflite
-#endif // TENSORFLOW_LITE_DELEGATES_OPENVINO_DELEGATE_KERNEL_H_
+}  // namespace openvinodelegate
+}  // namespace tflite
+#endif  // TENSORFLOW_LITE_DELEGATES_OPENVINO_DELEGATE_KERNEL_H_
