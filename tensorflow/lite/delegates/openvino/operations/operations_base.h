@@ -3,11 +3,13 @@
 
 #include <openvino/openvino.hpp>
 #include <openvino/opsets/opset8.hpp>
+#include <openvino/opsets/opset3.hpp>
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/builtin_op_data.h"
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
 #include "tensorflow/lite/tools/logging.h"
+#include "tensorflow/lite/kernels/padding.h"
 
 #define TFLITE_INPUT_NODE_1 0
 #define TFLITE_INPUT_NODE_2 1
@@ -35,14 +37,32 @@ protected:
     // tflite runtime related info to be added in Model BUilder
     int operationIndex;
     void* GetBuiltinData() { return builtin_data_; }
-    void* SetBuiltinData(void* builtin_data) { builtin_data_ = builtin_data; }
+    void SetBuiltinData(void* builtin_data) { builtin_data_ = builtin_data; }
     std::shared_ptr<ov::Node> getInputNode(int index) {
         return nodeManager->getInterimNodeOutput(index);
     }
+
+    template <typename T>
     std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType, ov::Shape shape,
-                                              const void* data) {
+                                              std::vector<T> data) {
         return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
     }
+
+    TfLiteStatus CalculatePadding(TfLitePadding padding, std::string& auto_pad) {
+        switch(padding) {
+            case kTfLitePaddingSame: {
+                auto_pad = "same-upper";
+		return kTfLiteOk;
+            }
+            case kTfLitePaddingValid: {
+                auto_pad = "explicit";
+		return kTfLiteOk;
+            }
+            default:
+                return kTfLiteError;
+       }
+    }
+
     std::shared_ptr<ov::Node> ApplyActivation(std::shared_ptr<ov::Node> input,
                                               TfLiteFusedActivation activation) {
         // TODO: change activation type from Tflite to OV runtime
@@ -73,6 +93,13 @@ protected:
         }
         return dims;
     }
+
+    void GetTensorData(int index, void* data) {
+        void* tensor_data = context_->tensors[index].data.data;
+	int size = context_->tensors[index].bytes;
+	std::memcpy(data, tensor_data, size);
+    }
+
 
 private:
     void* builtin_data_ = nullptr;

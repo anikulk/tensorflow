@@ -47,6 +47,12 @@ public:
             case kTfLiteBuiltinConv2d: {
                 return true;
             }
+            case kTfLiteBuiltinDepthwiseConv2d: {
+                return true;
+            }
+            case kTfLiteBuiltinResizeBilinear: {
+                return true;
+            }
             default:
                 return false;
         }
