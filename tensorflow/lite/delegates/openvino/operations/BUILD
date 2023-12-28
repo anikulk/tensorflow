@@ -10,10 +10,14 @@ cc_library(
     srcs = [
         "src/add.cc",
 	"src/conv2d.cc",
+	"src/depthwise_conv2d.cc",
+	"src/resize_bilinear.cc",
     ],
     hdrs = [
         "include/add.h",
 	"include/conv2d.h",
+	"include/depthwise_conv2d.h",
+	"include/resize_bilinear.h",
 	"operations_base.h",
 	"openvino_node_manager.h",
     ],
