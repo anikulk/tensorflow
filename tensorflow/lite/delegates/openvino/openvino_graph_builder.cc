@@ -26,6 +26,12 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::createOpClass(
         case kTfLiteBuiltinConv2d: {
             return std::make_shared<Conv2D>(operationIndex);
         }
+        case kTfLiteBuiltinDepthwiseConv2d: {
+            return std::make_shared<DepthwiseConv2D>(operationIndex);;
+        }
+        case kTfLiteBuiltinResizeBilinear: {
+            return std::make_shared<ResizeBilinear>(operationIndex);;
+        }
         default:
             return nullptr;
     }

@@ -21,7 +21,6 @@ cc_library(
     ],
     deps = [
         "//tensorflow/lite/c:common",
-        "//tensorflow/lite/core/api",
         "//tensorflow/lite/delegates/openvino/operations:operations_base",
         "//tensorflow/lite:kernel_api",
         "//tensorflow/lite/kernels:kernel_util",
@@ -43,7 +42,6 @@ cc_library(
         "//tensorflow/lite:kernel_api",
         "//tensorflow/lite/tools:logging",
         "//tensorflow/lite/c:common",
-        "//tensorflow/lite/core/api",
         "//tensorflow/lite/kernels:kernel_util",
         "@intel_openvino//:openvino",
     ],
@@ -62,7 +60,6 @@ cc_library(
         "//tensorflow/lite:kernel_api",
         "//tensorflow/lite/tools:logging",
         "//tensorflow/lite/c:common",
-        "//tensorflow/lite/core/api",
         "//tensorflow/lite/delegates/utils:simple_delegate",
         "//tensorflow/lite/kernels:kernel_util",
         "@intel_openvino//:openvino",
