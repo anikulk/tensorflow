@@ -47,7 +47,7 @@ TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(TfLiteContext* conte
             return kTfLiteError;
     }
 
-    openvino_graph_builder->updateResultNodes(outputs);
+    openvino_graph_builder->updateResultNodes(context, outputs);
     std::shared_ptr<ov::Model> model = std::make_shared<ov::Model>(
         openvino_graph_builder->getResultNodes(), openvino_graph_builder->getInputParams());
     // TODO: get device string from flags
