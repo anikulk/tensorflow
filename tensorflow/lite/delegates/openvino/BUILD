@@ -19,6 +19,7 @@ cc_library(
         "manual",
         "nobuilder",
     ],
+    
     deps = [
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/delegates/openvino/operations:operations_base",
@@ -137,7 +138,7 @@ cc_library(
     name = "openvino_delegate_test_mode",
     srcs = ["openvino_delegate.cc"],
     hdrs = ["openvino_delegate.h"],
-    copts = tflite_copts() + ["-DOPENVINO_DELEGATE_TEST_MODE=1"],
+    copts = tflite_copts() + ["-fexceptions"] + ["-DOPENVINO_DELEGATE_TEST_MODE=1"],
     linkstatic = True,
     deps = [
         ":openvino_delegate_kernel",
@@ -150,16 +151,15 @@ cc_library(
         "@intel_openvino//:openvino",
     ],
 )
-'''
+
 cc_test(
-    name = "openvino_graph_builder_test",
-    srcs = ["openvino_graph_builder_test.cc"],
+    name = "openvino_delegate_builder_test",
+    srcs = ["openvino_delegate_builder_test.cc"],
     linkopts = select({
         "//conditions:default": [],
     }),
     deps = [
         ":openvino_delegate_test_mode",
-        "@com_google_googletest//:gtest",
+        "@com_google_googletest//:gtest_main",
     ],
 )
-'''

@@ -9,7 +9,7 @@ namespace openvinodelegate {
 class Conv2D : public OperationsBase {
 public:
     Conv2D(int operationIndex) {}
-    std::shared_ptr<ov::Node> createNode() override;
+    std::shared_ptr<ov::Node> CreateNode() override;
 };
 
 }  // namespace openvinodelegate

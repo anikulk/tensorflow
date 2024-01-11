@@ -3,9 +3,9 @@
 namespace tflite {
 namespace openvinodelegate {
 
-std::shared_ptr<ov::Node> Conv2D::createNode() {
-    const TfLiteConvParams* conv2dParams = (TfLiteConvParams*)GetBuiltinData();
-    std::vector<int> filter_dims = GetDims(tensor_indices[TFLITE_FILTER_NODE]);
+std::shared_ptr<ov::Node> Conv2D::CreateNode() {
+    const TfLiteConvParams* conv2dParams = (TfLiteConvParams*) GetBuiltinData();
+    std::vector<int> filter_dims = GetDims(tensor_indices_[TFLITE_FILTER_NODE]);
     std::vector<size_t> strides;
     std::vector<std::ptrdiff_t> padding_begin, padding_end;
     std::vector<size_t> dilations;
@@ -37,14 +37,18 @@ std::shared_ptr<ov::Node> Conv2D::createNode() {
     padding_end = {padding_bottom, padding_right};
     dilations = {(size_t)conv2dParams->dilation_height_factor,
                  (size_t)conv2dParams->dilation_width_factor};
-    auto input_node = getInputNode(tensor_indices[TFLITE_INPUT_NODE_1]);
-    auto filter_node = getInputNode(tensor_indices[TFLITE_FILTER_NODE]);
-    auto bias_node = getInputNode(tensor_indices[TFLITE_BIAS_NODE]);
+    auto input_node = getInputNode(tensor_indices_[TFLITE_INPUT_NODE_1]);
+    auto filter_node = getInputNode(tensor_indices_[TFLITE_FILTER_NODE]);
+    ov::AxisVector order = {0, 3, 1, 2};
+    const auto order_node =
+        ov::opset3::Constant::create(ov::element::i64, ov::Shape{order.size()}, order);
+    filter_node = std::make_shared<ov::opset3::Transpose>(filter_node, order_node);
+    auto bias_node = getInputNode(tensor_indices_[TFLITE_BIAS_NODE]);
 
-    auto convNode = std::make_shared<ov::opset8::Convolution>(
+    auto conv_node = std::make_shared<ov::opset8::Convolution>(
         input_node, filter_node, ov::Strides(strides), ov::CoordinateDiff(padding_begin),
         ov::CoordinateDiff(padding_end), ov::Strides(dilations), auto_pad);
-    return convNode;
+    return conv_node;
 }
 
 }  // namespace openvinodelegate
