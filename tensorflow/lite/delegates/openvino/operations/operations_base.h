@@ -2,14 +2,14 @@
 #define TENSORFLOW_LITE_DELEGATES_OPERATIONS_BASE_H_
 
 #include <openvino/openvino.hpp>
-#include <openvino/opsets/opset8.hpp>
 #include <openvino/opsets/opset3.hpp>
+#include <openvino/opsets/opset8.hpp>
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/builtin_op_data.h"
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
-#include "tensorflow/lite/tools/logging.h"
 #include "tensorflow/lite/kernels/padding.h"
+#include "tensorflow/lite/tools/logging.h"
 
 #define TFLITE_INPUT_NODE_1 0
 #define TFLITE_INPUT_NODE_2 1
@@ -49,18 +49,18 @@ protected:
     }
 
     TfLiteStatus CalculatePadding(TfLitePadding padding, std::string& auto_pad) {
-        switch(padding) {
+        switch (padding) {
             case kTfLitePaddingSame: {
                 auto_pad = "same-upper";
-		return kTfLiteOk;
+                return kTfLiteOk;
             }
             case kTfLitePaddingValid: {
                 auto_pad = "explicit";
-		return kTfLiteOk;
+                return kTfLiteOk;
             }
             default:
                 return kTfLiteError;
-       }
+        }
     }
 
     std::shared_ptr<ov::Node> ApplyActivation(std::shared_ptr<ov::Node> input,
@@ -72,6 +72,7 @@ protected:
             case kTfLiteActRelu:
                 return std::make_shared<ov::opset8::Relu>(input);
             case kTfLiteActReluN1To1:
+                return std::make_shared<ov::opset8::Clamp>(input, -1, 1);
             case kTfLiteActRelu6:
                 return std::make_shared<ov::opset8::Clamp>(input, 0, 6);
             case kTfLiteActTanh:
@@ -96,10 +97,32 @@ protected:
 
     void GetTensorData(int index, void* data) {
         void* tensor_data = context_->tensors[index].data.data;
-	int size = context_->tensors[index].bytes;
-	std::memcpy(data, tensor_data, size);
+        int size = context_->tensors[index].bytes;
+        std::memcpy(data, tensor_data, size);
     }
 
+    std::shared_ptr<ov::Node> convertNHWCtoNCHW(int index, std::shared_ptr<ov::Node> input) {
+        auto node_dims = GetDims(tensor_indices[index]);
+        ov::AxisVector order = {0, 3, 1, 2};
+        const auto order_node = std::make_shared<ov::opset8::Constant>(
+            ov::element::i64, ov::Shape{order.size()}, order);
+        if (node_dims.size() < 4 && node_dims.size() > 0) {
+            auto size = node_dims.size();
+            for (int i = 0; i < 4 - size; i++) {
+                node_dims.insert(node_dims.begin(), 1);
+            }
+            auto new_size = createConstNode(ov::element::i32, ov::Shape{4}, node_dims);
+            input = std::make_shared<ov::opset8::Reshape>(input, new_size, false);
+            input = std::make_shared<ov::opset3::Transpose>(input, order_node);
+        }
+        if (node_dims.size() == 5) {
+            order = {0, 4, 1, 2, 3};
+            const auto order_node = std::make_shared<ov::opset8::Constant>(
+                ov::element::i64, ov::Shape{order.size()}, order);
+            input = std::make_shared<ov::opset3::Transpose>(input, order_node);
+        }
+        return input;
+    }
 
 private:
     void* builtin_data_ = nullptr;
