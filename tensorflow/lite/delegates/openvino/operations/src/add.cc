@@ -15,6 +15,10 @@ std::shared_ptr<ov::Node> Add::createNode() {
         TFLITE_LOG(INFO) << "input Node 2 is null\n";
         return nullptr;
     }
+
+    inputNode1 = convertNHWCtoNCHW(TFLITE_INPUT_NODE_1, inputNode1);
+    inputNode2 = convertNHWCtoNCHW(TFLITE_INPUT_NODE_2, inputNode2);
+
     auto addNode =
         std::make_shared<ov::opset8::Add>(inputNode1, inputNode2, ov::op::AutoBroadcastType::NUMPY);
     auto outputNode = ApplyActivation(addNode, add_params->activation);

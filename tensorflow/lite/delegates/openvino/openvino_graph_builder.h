@@ -36,10 +36,11 @@ public:
         }
         inputParams.push_back(input);
 
-	if (dims.size() == 4) {
+        if (dims.size() == 4) {
             ov::AxisVector order;
-            order = {0,3,1,2};
-            const auto order_node = std::make_shared<ov::opset8::Constant>(ov::element::i64, ov::Shape{order.size()}, order);
+            order = {0, 3, 1, 2};
+            const auto order_node = std::make_shared<ov::opset8::Constant>(
+                ov::element::i64, ov::Shape{order.size()}, order);
             auto interim = std::make_shared<ov::opset3::Transpose>(input, order_node);
             nodeManager->setOutputAtOperandIndex(index, interim);
             return kTfLiteOk;
@@ -69,14 +70,14 @@ public:
     void updateResultNodes(const TfLiteContext* context, std::vector<int> outputs) {
         for (auto o : outputs) {
             auto outNode = nodeManager->getInterimNodeOutput(o);
-	    const TfLiteTensor t = context->tensors[o];
-            std::vector<size_t> dims(t.dims->size);
-	    if(dims.size() == 4) {
+            auto dims = outNode->get_shape();
+            if (dims.size() == 4) {
                 ov::AxisVector order;
-                order = {0,2,3,1};
-                const auto order_node = std::make_shared<ov::opset8::Constant>(ov::element::i64, ov::Shape{order.size()}, order);
+                order = {0, 2, 3, 1};
+                const auto order_node = std::make_shared<ov::opset8::Constant>(
+                    ov::element::i64, ov::Shape{order.size()}, order);
                 outNode = std::make_shared<ov::opset3::Transpose>(outNode, order_node);
-	    }
+            }
             resultNodes.push_back(outNode);
         }
     }
