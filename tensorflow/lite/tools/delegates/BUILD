@@ -72,7 +72,7 @@ cc_library_with_tflite(
 cc_library(
     name = "gpu_delegate_provider",
     srcs = ["gpu_delegate_provider.cc"],
-    copts = common_copts + select({
+    copts = common_copts + ["-fexceptions"] + select({
         "//tensorflow:ios": [
             "-xobjective-c++",
         ],
@@ -130,7 +130,7 @@ cc_library(
 cc_library(
     name = "coreml_delegate_provider",
     srcs = ["coreml_delegate_provider.cc"],
-    copts = common_copts + select({
+    copts = common_copts + ["-fexceptions"] + select({
         "//tensorflow:ios": [
             "-xobjective-c++",
         ],
