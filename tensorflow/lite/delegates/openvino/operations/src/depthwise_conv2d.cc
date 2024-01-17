@@ -23,12 +23,8 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::createNode() {
         has_bias = true;
     }
 
-    int expected_height = 0;
-    int expected_weight = 0;
     std::string auto_pad;
-    auto pad_type = ov::op::PadType::EXPLICIT;
-    std::vector<int32_t> padding(4, 0);
-    auto filter_dims = GetDims(tensor_indices[TFLITE_FILTER_NODE]);
+    ov::op::PadType pad_type;
     auto input_dims = GetDims(tensor_indices[TFLITE_INPUT_NODE_1]);
 
     TfLiteStatus status = CalculatePadding(depth_conv2dParams->padding, auto_pad);
@@ -38,18 +34,28 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::createNode() {
     }
 
     if (auto_pad == "same-upper") {
-        padding[0] = 0;  // top
-        padding[1] = 0;  // bottom
-        padding[2] = 0;  // left
-        padding[3] = 0;  // right
         pad_type = ov::op::PadType::SAME_UPPER;
+    } else if (auto_pad == "valid") {
+        pad_type = ov::op::PadType::VALID;
     }
-    // TODO: define paddings for explicit padding
 
-    // TODO: transpose filter node
+    //TODO: lookout for order while running with an actual graph
+    ov::AxisVector order = {1,0,2,3};
+    const auto order_node = std::make_shared<ov::opset8::Constant>(
+        ov::element::i64, ov::Shape{order.size()}, order);
+    filterNode = std::make_shared<ov::opset3::Transpose>(filterNode, order_node);
+
+    std::vector<size_t> shape(&filterNode->get_shape()[0], &filterNode->get_shape()[0] + 4);
+    auto num_groups = input_dims[3] / filterNode->get_shape()[1];
+    shape.insert(shape.begin(), num_groups);
+    shape[1]  = filterNode->get_shape()[0] / num_groups;
+    auto shapeNode = createConstNode(ov::element::i32, ov::Shape{shape.size()}, shape);
+
+    filterNode = std::make_shared<ov::opset3::Reshape>(filterNode, shapeNode, true);
+
     auto depthwise_convNode = std::make_shared<ov::opset3::GroupConvolution>(
-        inputNode, filterNode, ov::Strides(strides), ov::CoordinateDiff(padding[0], padding[2]),
-        ov::CoordinateDiff(padding[1], padding[3]), ov::Strides(dilations), pad_type);
+        inputNode, filterNode, ov::Strides(strides), ov::CoordinateDiff(0, 0),
+        ov::CoordinateDiff(0, 0), ov::Strides(dilations), pad_type);
 
     if (has_bias) {
         auto biasDimensions = GetDims(tensor_indices[TFLITE_BIAS_NODE]);
@@ -64,6 +70,7 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::createNode() {
     }
 
     outputNode = ApplyActivation(outputNode, depth_conv2dParams->activation);
+    return outputNode;
 }
 
 }  // namespace openvinodelegate
