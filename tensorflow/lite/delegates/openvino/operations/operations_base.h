@@ -55,7 +55,7 @@ protected:
                 return kTfLiteOk;
             }
             case kTfLitePaddingValid: {
-                auto_pad = "explicit";
+                auto_pad = "valid";
                 return kTfLiteOk;
             }
             default:
