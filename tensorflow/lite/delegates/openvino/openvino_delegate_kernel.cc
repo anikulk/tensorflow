@@ -19,8 +19,8 @@ limitations under the License.
 namespace tflite {
 namespace openvinodelegate {
 
-TfLiteStatus OpenVINODelegateKernel::Init(TfLiteContext* context,
-                                          const TfLiteDelegateParams* params) {
+TfLiteStatus OpenVINODelegateKernel::Init(TfLiteOpaqueContext* context,
+                                          const TfLiteOpaqueDelegateParams* params) {
     TFLITE_LOG(INFO) << "Openvino delegate Kernel Init function called"
                      << "\n";
     // Should we do some NPU Init here.
@@ -38,20 +38,23 @@ TfLiteStatus OpenVINODelegateKernel::Init(TfLiteContext* context,
     return kTfLiteOk;
 }
 
-TfLiteStatus OpenVINODelegateKernel::Prepare(TfLiteContext* context, TfLiteNode* node) {
+TfLiteStatus OpenVINODelegateKernel::Prepare(TfLiteOpaqueContext* context, TfLiteOpaqueNode* node) {
     TFLITE_LOG(INFO) << "inside Prepare \n";
     return kTfLiteOk;
 }
 
-TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteContext* context, TfLiteNode* node) {
+TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteOpaqueContext* context, TfLiteOpaqueNode* node) {
     TFLITE_LOG(INFO) << "inside Eval \n";
     std::vector<int> compute_inputs = ov_delegate_manager->getComputeInputs();
     size_t i = 0;
     for (int t : compute_inputs) {
         ov::Tensor inputBlob = ov_delegate_manager->inferRequest.get_input_tensor(i++);
         uint8_t* dest = (uint8_t*)inputBlob.data<float>();
-        auto len = context->tensors[t].bytes;
-        void* srcPtr = context->tensors[t].data.data;
+
+        const TfLiteOpaqueTensor* opaque_input_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, t);
+        auto len = TfLiteOpaqueTensorByteSize(opaque_input_tensor);
+        void* srcPtr = TfLiteOpaqueTensorData(opaque_input_tensor);
+
         float* src = (float*)srcPtr;
         std::memcpy((uint8_t*)dest, (uint8_t*)srcPtr, len);
     }
@@ -61,9 +64,10 @@ TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteContext* context, TfLiteNode* no
     size_t o = 0;
     for (int t : outputs) {
         ov::Tensor outputBlob = ov_delegate_manager->inferRequest.get_output_tensor(o);
-        void* srcPtr = context->tensors[*(outputs.begin())].data.data;
+        const TfLiteOpaqueTensor* opaque_output_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, *(outputs.begin()));
+        void* srcPtr = TfLiteOpaqueTensorData(opaque_output_tensor);
         uint8_t* dest = (uint8_t*)outputBlob.data<float>();
-        auto len = context->tensors[*(outputs.begin())].bytes;
+        auto len = TfLiteOpaqueTensorByteSize(opaque_output_tensor);
         std::memcpy((void*)srcPtr, (void*)dest, len);
         o++;
     }

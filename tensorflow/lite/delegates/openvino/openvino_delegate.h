@@ -17,10 +17,14 @@ limitations under the License.
 
 #include "openvino_delegate_kernel.h"
 #include "tensorflow/lite/c/common.h"
+#include "tensorflow/lite/delegates/utils/simple_opaque_delegate.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
+
+static const char kOpenVINOStableDelegateName[] = "intel_openvino_delegate";
+static const char kOpenVINOStableDelegateVersion[] = "1.0.0";
 
 struct TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptions {
     /* debug_level for the OpenVINO delegate*/
@@ -37,10 +41,38 @@ struct TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptions {
 
 TfLiteOpenVINODelegateOptions TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptionsDefault();
 
-TfLiteDelegate *TFL_CAPI_EXPORT
+TfLiteOpaqueDelegate *TFL_CAPI_EXPORT
 TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions *options);
 
-void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteDelegate *delegate);
+void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteOpaqueDelegate *delegate);
+
+namespace tflite {
+namespace openvinodelegate {
+
+class OpenVINODelegate : public SimpleOpaqueDelegateInterface {
+public:
+    explicit OpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) : options_(*options) {
+        if (options == nullptr) options_ = TfLiteOpenVINODelegateOptionsDefault();
+    }
+
+    bool CheckInputsType(int tensor_id, TfLiteOpaqueContext* context, TfLiteType expected_type) const;
+    bool CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
+                                    TfLiteOpaqueContext* context) const;
+
+    bool IsNodeSupportedByDelegate(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
+                                   TfLiteOpaqueContext* context) const override;
+
+    TfLiteStatus Initialize(TfLiteOpaqueContext* context) override;
+
+    const char* Name() const override;
+
+    std::unique_ptr<SimpleOpaqueDelegateKernelInterface> CreateDelegateKernelInterface() override;
+
+private:
+    TfLiteOpenVINODelegateOptions options_;
+};
+}  // namespace openvinodelegate
+}  // namespace tflite
 
 #ifdef __cplusplus
 }

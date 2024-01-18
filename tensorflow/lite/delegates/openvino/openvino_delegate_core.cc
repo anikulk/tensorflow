@@ -4,8 +4,8 @@
 namespace tflite {
 namespace openvinodelegate {
 
-TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(TfLiteContext* context,
-                                                            const TfLiteDelegateParams* params) {
+TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(TfLiteOpaqueContext* context,
+                                                            const TfLiteOpaqueDelegateParams* params) {
     const std::unordered_set<int> inputs(&params->input_tensors->data[0],
                                          &params->input_tensors->data[params->input_tensors->size]);
     openvino_graph_builder = std::make_unique<OpenVINOGraphBuilder>();
@@ -17,20 +17,27 @@ TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(TfLiteContext* conte
 
     for (int i = 0; i < params->nodes_to_replace->size; i++) {
         const int delegate_node_id = params->nodes_to_replace->data[i];
-        TfLiteNode* delegate_node;
-        TfLiteRegistration* delegate_node_registration;
-        if (context->GetNodeAndRegistration(context, delegate_node_id, &delegate_node,
-                                            &delegate_node_registration))
-            return kTfLiteError;
+        TfLiteOpaqueNode* delegate_node;
+        TfLiteRegistrationExternal* delegate_node_registration;
+        if(TfLiteOpaqueContextGetNodeAndRegistration(context, delegate_node_id, &delegate_node, &delegate_node_registration))
+             return kTfLiteError;
 
-        for (int k = 0; k < delegate_node->inputs->size; k++) {
-            if (delegate_node_registration->builtin_code == kTfLiteBuiltinTransposeConv && k == 0) {
+        int inputs_size = TfLiteOpaqueNodeNumberOfInputs(delegate_node);
+        for (int k = 0; k < inputs_size; k++) {
+            if (TfLiteRegistrationExternalGetBuiltInCode(delegate_node_registration) == kTfLiteBuiltinTransposeConv && k == 0) {
+
                 continue;
             }
-            const int t = delegate_node->inputs->data[k];
+            const int* inputs_data;
+            int num_inputs;
+            TfLiteStatus tf_status = TfLiteOpaqueNodeInputs(delegate_node, &inputs_data, &num_inputs);
+            const int t = inputs_data[k];
             const void* data = nullptr;
-            if (context->tensors[t].allocation_type == kTfLiteMmapRo) {
-                data = context->tensors[t].data.raw_const;
+            auto opaque_tensor =  TfLiteOpaqueContextGetOpaqueTensor(context, t);
+            auto allocation_type = TfLiteOpaqueTensorGetAllocationType(opaque_tensor);
+            if (allocation_type == kTfLiteMmapRo) {
+                data = TfLiteOpaqueTensorData(opaque_tensor);
+
                 if (openvino_graph_builder->createConstNode(context, t) != kTfLiteOk)
                     return kTfLiteError;
             }
@@ -54,7 +61,6 @@ TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(TfLiteContext* conte
     std::string deviceStr = "CPU";
     if (model) {
         compiled_model = openvino_delegate_core.compile_model(model, deviceStr);
-
         ov::pass::Manager manager;
         manager.register_pass<ov::pass::Serialize>("/tmp/model.xml", "/tmp/model.bin");
         manager.run_passes(model);
