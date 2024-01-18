@@ -25,21 +25,21 @@ limitations under the License.
 #include "openvino_delegate_core.h"
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/common.h"
-#include "tensorflow/lite/delegates/utils/simple_delegate.h"
+#include "tensorflow/lite/delegates/utils/simple_opaque_delegate.h"
 #include "tensorflow/lite/tools/logging.h"
 
 namespace tflite {
 namespace openvinodelegate {
-class OpenVINODelegateKernel : public SimpleDelegateKernelInterface {
+class OpenVINODelegateKernel : public SimpleOpaqueDelegateKernelInterface {
 public:
     explicit OpenVINODelegateKernel()
         : ov_delegate_manager(std::make_unique<OpenVINODelegateManager>("")) {}
-    TfLiteStatus Init(TfLiteContext* context, const TfLiteDelegateParams* params) override;
 
-    TfLiteStatus Prepare(TfLiteContext* context, TfLiteNode* node) override;
+    TfLiteStatus Init(TfLiteOpaqueContext* context, const TfLiteOpaqueDelegateParams* params) override;
 
-    TfLiteStatus Eval(TfLiteContext* context, TfLiteNode* node) override;
+    TfLiteStatus Prepare(TfLiteOpaqueContext* context, TfLiteOpaqueNode* node) override;
 
+    TfLiteStatus Eval(TfLiteOpaqueContext* context, TfLiteOpaqueNode* node) override;
     std::shared_ptr<ov::Node> ApplyActivation(std::shared_ptr<ov::Node> input,
                                               TfLiteFusedActivation activation);
 

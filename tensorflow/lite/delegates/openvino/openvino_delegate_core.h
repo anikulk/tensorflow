@@ -28,7 +28,7 @@ public:
 
     std::vector<int> getOutputs() { return outputs; }
 
-    TfLiteStatus createGraphfromTfLite(TfLiteContext* context, const TfLiteDelegateParams* params);
+    TfLiteStatus createGraphfromTfLite(TfLiteOpaqueContext* context, const TfLiteOpaqueDelegateParams* params);
     ov::InferRequest inferRequest;
 
 private:

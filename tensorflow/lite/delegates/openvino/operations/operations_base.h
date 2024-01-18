@@ -7,6 +7,9 @@
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/builtin_op_data.h"
 #include "tensorflow/lite/c/common.h"
+#include "tensorflow/lite/c/c_api.h"
+#include "tensorflow/lite/c/c_api_opaque.h"
+#include "tensorflow/lite/c/c_api_types.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
 #include "tensorflow/lite/kernels/padding.h"
 #include "tensorflow/lite/tools/logging.h"
@@ -26,12 +29,12 @@ public:
         tensor_indices_size = size;
         SetBuiltinData(builtin_data);
     }
-    void SetContext(const TfLiteContext* context) { context_ = context; }
+    void SetContext(const TfLiteOpaqueContext* context) { context_ = context; }
     virtual std::shared_ptr<ov::Node> createNode() = 0;
     int* tensor_indices;
     int tensor_indices_size;
     std::shared_ptr<NodeManager> nodeManager;
-    const TfLiteContext* context_;
+    const TfLiteOpaqueContext* context_;
 
 protected:
     // tflite runtime related info to be added in Model BUilder
@@ -87,17 +90,23 @@ protected:
     }
 
     std::vector<int> GetDims(int index) {
-        const TfLiteTensor t = context_->tensors[index];
-        std::vector<int> dims(t.dims->size);
-        for (int i = 0; i < t.dims->size; i++) {
-            dims[i] = t.dims->data[i];
+        auto t = TfLiteOpaqueContextGetOpaqueTensor(context_, index);
+        int32_t num_dims;
+        num_dims = TfLiteOpaqueTensorNumDims(t);
+        std::vector<int> dims(num_dims);
+        for (int i = 0; i < num_dims; i++) {
+            dims[i]  = TfLiteOpaqueTensorDim(t,i);
         }
         return dims;
     }
 
     void GetTensorData(int index, void* data) {
-        void* tensor_data = context_->tensors[index].data.data;
-        int size = context_->tensors[index].bytes;
+        auto opaque_tensor =  TfLiteOpaqueContextGetOpaqueTensor(context_, index);
+        void* tensor_data = TfLiteOpaqueTensorData(opaque_tensor);
+        auto size = TfLiteOpaqueTensorByteSize(opaque_tensor);
+	TFLITE_LOG(INFO) << "size of tensor is " << size << "\n";
+	TFLITE_LOG(INFO) << "teneosr data is " << ((float*) tensor_data)[0] << "\n";
+	TFLITE_LOG(INFO) << "teneosr data is " << ((float*) tensor_data)[1] << "\n";
         std::memcpy(data, tensor_data, size);
     }
 
