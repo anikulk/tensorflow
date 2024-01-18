@@ -28,25 +28,14 @@ cc_test(
     ],
 )
 
-cc_library(
+# Make this an alias to avoid ODR violation with GPU delegate.
+alias(
     name = "builtin_ops",
-    srcs = ["register.cc"],
-    hdrs = [
-        "builtin_op_kernels.h",
-        "register.h",
-    ],
+    actual = "builtin_ops_all_linked",
     compatible_with = get_compatible_with_portable(),
     visibility = [
         "//tensorflow/lite:__subpackages__",
     ] + builtin_ops_visibility_allowlist(),
-    deps = [
-        "//tensorflow/lite:mutable_op_resolver",
-        "//tensorflow/lite:tflite_with_xnnpack_optional",
-        "//tensorflow/lite/core:cc_api_stable",
-        "//tensorflow/lite/core/c:common",
-        "//tensorflow/lite/kernels:builtin_op_kernels",
-        "//tensorflow/lite/schema:schema_fbs",
-    ],
 )
 
 # For internal usage by shared libraries only.

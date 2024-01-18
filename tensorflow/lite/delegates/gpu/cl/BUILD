@@ -349,7 +349,7 @@ cc_library(
     srcs = ["gpu_api_delegate.cc"],
     hdrs = ["gpu_api_delegate.h"],
     linkopts = select({
-        "//tensorflow:android": [
+        "//tensorflow/lite/delegates/gpu:force_enable_gpu_delegate": [
             "-lEGL",
             "-lGLESv3",
         ],
