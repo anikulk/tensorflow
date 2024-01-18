@@ -25,28 +25,27 @@ namespace openvinodelegate {
 class OperationsBase {
 public:
     void UpdateNodeInfo(void* data, int size, void* builtin_data) {
-        tensor_indices = (int*)data;
-        tensor_indices_size = size;
+        tensor_indices_ = (int*)data;
+        tensor_indices_size_ = size;
         SetBuiltinData(builtin_data);
     }
-    void SetContext(const TfLiteOpaqueContext* context) { context_ = context; }
-    virtual std::shared_ptr<ov::Node> createNode() = 0;
-    int* tensor_indices;
-    int tensor_indices_size;
-    std::shared_ptr<NodeManager> nodeManager;
-    const TfLiteOpaqueContext* context_;
+    void SetGraphData(const TfLiteOpaqueContext* context, NodeManager* node_manager) {
+      context_ = context;
+      node_manager_ = node_manager;
+    }
+    virtual std::shared_ptr<ov::Node> CreateNode() = 0;
 
 protected:
     // tflite runtime related info to be added in Model BUilder
-    int operationIndex;
+    int operation_index_;
     void* GetBuiltinData() { return builtin_data_; }
     void SetBuiltinData(void* builtin_data) { builtin_data_ = builtin_data; }
     std::shared_ptr<ov::Node> getInputNode(int index) {
-        return nodeManager->getInterimNodeOutput(index);
+        return node_manager_->getInterimNodeOutput(index);
     }
 
     template <typename T>
-    std::shared_ptr<ov::Node> createConstNode(ov::element::Type elementType, ov::Shape shape,
+    std::shared_ptr<ov::Node> CreateConstNode(ov::element::Type elementType, ov::Shape shape,
                                               std::vector<T> data) {
         return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
     }
@@ -104,14 +103,11 @@ protected:
         auto opaque_tensor =  TfLiteOpaqueContextGetOpaqueTensor(context_, index);
         void* tensor_data = TfLiteOpaqueTensorData(opaque_tensor);
         auto size = TfLiteOpaqueTensorByteSize(opaque_tensor);
-	TFLITE_LOG(INFO) << "size of tensor is " << size << "\n";
-	TFLITE_LOG(INFO) << "teneosr data is " << ((float*) tensor_data)[0] << "\n";
-	TFLITE_LOG(INFO) << "teneosr data is " << ((float*) tensor_data)[1] << "\n";
         std::memcpy(data, tensor_data, size);
     }
 
     std::shared_ptr<ov::Node> convertNHWCtoNCHW(int index, std::shared_ptr<ov::Node> input) {
-        auto node_dims = GetDims(tensor_indices[index]);
+        auto node_dims = GetDims(tensor_indices_[index]);
         ov::AxisVector order = {0, 3, 1, 2};
         const auto order_node = std::make_shared<ov::opset8::Constant>(
             ov::element::i64, ov::Shape{order.size()}, order);
@@ -120,7 +116,7 @@ protected:
             for (int i = 0; i < 4 - size; i++) {
                 node_dims.insert(node_dims.begin(), 1);
             }
-            auto new_size = createConstNode(ov::element::i32, ov::Shape{4}, node_dims);
+            auto new_size = CreateConstNode(ov::element::i32, ov::Shape{4}, node_dims);
             input = std::make_shared<ov::opset8::Reshape>(input, new_size, false);
             input = std::make_shared<ov::opset3::Transpose>(input, order_node);
         }
@@ -133,9 +129,14 @@ protected:
         return input;
     }
 
+    int* tensor_indices_;
+    int tensor_indices_size_;
+
 private:
     void* builtin_data_ = nullptr;
     int op_type_ = 0;
+    NodeManager* node_manager_;
+    const TfLiteOpaqueContext* context_;
 };
 
 }  // namespace openvinodelegate

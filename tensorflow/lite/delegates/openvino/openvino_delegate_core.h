@@ -8,38 +8,42 @@
 #include <openvino/pass/serialize.hpp>
 #include <openvino/runtime/core.hpp>
 #include "openvino_graph_builder.h"
+#include "operations/openvino_node_manager.h"
+
 namespace tflite {
 namespace openvinodelegate {
-class OpenVINODelegateManager {
+class OpenVINODelegateCore {
 public:
-    OpenVINODelegateManager(std::string_view plugins_path) : openvino_delegate_core(ov::Core()) {
-        plugins_location = plugins_path;
+    OpenVINODelegateCore(std::string_view plugins_path) : openvino_delegate_core_(ov::Core()) {
+        plugins_location_ = plugins_path;
     }
-    TfLiteStatus openvino_delegate_init() {
-        std::vector<std::string> ovDevices = openvino_delegate_core.get_available_devices();
-        if (std::find(ovDevices.begin(), ovDevices.end(), "CPU") == ovDevices.end()) {
+    TfLiteStatus OpenVINODelegateInit() {
+        std::vector<std::string> ov_devices = openvino_delegate_core_.get_available_devices();
+        if (std::find(ov_devices.begin(), ov_devices.end(), "CPU") == ov_devices.end()) {
             return kTfLiteDelegateError;
         } else {
             return kTfLiteOk;
         }
     }
 
-    std::vector<int> getComputeInputs() { return compute_inputs; }
+    std::vector<int> getComputeInputs() { return compute_inputs_; }
 
-    std::vector<int> getOutputs() { return outputs; }
+    std::vector<int> getOutputs() { return outputs_; }
 
-    TfLiteStatus createGraphfromTfLite(TfLiteOpaqueContext* context, const TfLiteOpaqueDelegateParams* params);
-    ov::InferRequest inferRequest;
+    ov::InferRequest getInferRequest() const { return infer_request_; }
+
+    TfLiteStatus CreateGraphfromTfLite(TfLiteOpaqueContext* context, const TfLiteOpaqueDelegateParams* params);
 
 private:
-    std::unique_ptr<OpenVINOGraphBuilder> openvino_graph_builder;
-    ov::Core openvino_delegate_core;
-    std::string plugins_location;
-    std::shared_ptr<ov::Model> model;
-    ov::CompiledModel compiled_model;
-    std::string deviceStr = "CPU";
-    std::vector<int> compute_inputs = {};
-    std::vector<int> outputs = {};
+    std::unique_ptr<OpenVINOGraphBuilder> openvino_graph_builder_;
+    ov::Core openvino_delegate_core_;
+    std::string plugins_location_;
+    std::shared_ptr<ov::Model> model_;
+    ov::CompiledModel compiled_model_;
+    std::string ov_device_ = "CPU";
+    std::vector<int> compute_inputs_ = {};
+    std::vector<int> outputs_ = {};
+    ov::InferRequest infer_request_;
 };
 }  // namespace openvinodelegate
 }  // namespace tflite

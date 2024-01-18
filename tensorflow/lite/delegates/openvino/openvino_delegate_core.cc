@@ -4,15 +4,17 @@
 namespace tflite {
 namespace openvinodelegate {
 
-TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(TfLiteOpaqueContext* context,
+TfLiteStatus OpenVINODelegateCore::CreateGraphfromTfLite(TfLiteOpaqueContext* context,
                                                             const TfLiteOpaqueDelegateParams* params) {
     const std::unordered_set<int> inputs(&params->input_tensors->data[0],
                                          &params->input_tensors->data[params->input_tensors->size]);
-    openvino_graph_builder = std::make_unique<OpenVINOGraphBuilder>();
+
+  openvino_graph_builder_ =
+      std::make_unique<OpenVINOGraphBuilder>(std::make_unique<NodeManager>());
 
     for (int o = 0; o < params->output_tensors->size; o++) {
         const int output_tensor_idx = params->output_tensors->data[o];
-        outputs.push_back(output_tensor_idx);
+        outputs_.push_back(output_tensor_idx);
     }
 
     for (int i = 0; i < params->nodes_to_replace->size; i++) {
@@ -38,35 +40,35 @@ TfLiteStatus OpenVINODelegateManager::createGraphfromTfLite(TfLiteOpaqueContext*
             if (allocation_type == kTfLiteMmapRo) {
                 data = TfLiteOpaqueTensorData(opaque_tensor);
 
-                if (openvino_graph_builder->createConstNode(context, t) != kTfLiteOk)
+                if (openvino_graph_builder_->CreateConstNode(context, t) != kTfLiteOk)
                     return kTfLiteError;
             }
             if (inputs.count(t) != 0) {
                 if (data == nullptr) {
-                    if (openvino_graph_builder->addInputParams(context, t) != kTfLiteOk)
+                    if (openvino_graph_builder_->AddInputParams(opaque_tensor, t) != kTfLiteOk)
                         return kTfLiteError;
-                    compute_inputs.push_back(t);
+                    compute_inputs_.push_back(t);
                 }
             }
         }
-        if (openvino_graph_builder->createNodeFromTfLiteOp(
+        if (openvino_graph_builder_->CreateNodeFromTfLiteOp(
                 delegate_node_id, delegate_node_registration, delegate_node, context) != kTfLiteOk)
             return kTfLiteError;
     }
 
-    openvino_graph_builder->updateResultNodes(context, outputs);
+    openvino_graph_builder_->UpdateResultNodes(context, outputs_);
     std::shared_ptr<ov::Model> model = std::make_shared<ov::Model>(
-        openvino_graph_builder->getResultNodes(), openvino_graph_builder->getInputParams());
+        openvino_graph_builder_->getResultNodes(), openvino_graph_builder_->getInputParams());
     // TODO: get device string from flags
     std::string deviceStr = "CPU";
     if (model) {
-        compiled_model = openvino_delegate_core.compile_model(model, deviceStr);
+        compiled_model_ = openvino_delegate_core_.compile_model(model, deviceStr);
         ov::pass::Manager manager;
         manager.register_pass<ov::pass::Serialize>("/tmp/model.xml", "/tmp/model.bin");
         manager.run_passes(model);
     }
 
-    inferRequest = compiled_model.create_infer_request();
+    infer_request_ = compiled_model_.create_infer_request();
     return kTfLiteOk;
 }
 

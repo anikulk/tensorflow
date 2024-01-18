@@ -89,6 +89,6 @@ void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteOpaqueDelegate* delegate
 TfLiteOpenVINODelegateOptions TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptionsDefault() {
     TfLiteOpenVINODelegateOptions result;
     result.debug_level = 0;
-    result.plugins_path = "";
+    result.plugins_path = "/tmp/plugins.xml";
     return result;
 }
