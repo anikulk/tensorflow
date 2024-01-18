@@ -9,7 +9,7 @@ namespace openvinodelegate {
 class Add : public OperationsBase {
 public:
     Add(int operationIndex) {}
-    std::shared_ptr<ov::Node> createNode() override;
+    std::shared_ptr<ov::Node> CreateNode() override;
 };
 
 }  // namespace openvinodelegate

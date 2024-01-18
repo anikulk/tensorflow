@@ -20,38 +20,41 @@ namespace openvinodelegate {
 
 class OpenVINOGraphBuilder {
 public:
-    OpenVINOGraphBuilder() { nodeManager = std::make_shared<NodeManager>(); }
+  OpenVINOGraphBuilder(std::unique_ptr<NodeManager> node_manager) {
+    node_manager_ = std::move(node_manager);
+  }
 
-    TfLiteStatus addInputParams(const TfLiteOpaqueContext* context, const int index) {
-        auto t = TfLiteOpaqueContextGetOpaqueTensor(context, index);
-        int32_t num_dims;
-        num_dims = TfLiteOpaqueTensorNumDims(t);
+  TfLiteStatus AddInputParams(const TfLiteOpaqueTensor* t, const int index) {
+        int32_t num_dims = TfLiteOpaqueTensorNumDims(t);
         std::vector<int> dims(num_dims);
-        for (int i = 0; i < num_dims; i++)
+        for (int i = 0; i < num_dims; i++) {
             dims[i]  = TfLiteOpaqueTensorDim(t,i);
+	}
+
+        if (dims.size() <= 0) return kTfLiteError;
+
         auto input = std::make_shared<ov::opset3::Parameter>(ov::element::f32,
                                                              ov::Shape(dims.begin(), dims.end()));
         if (input == NULL) {
             TFLITE_LOG(INFO) << "addInputParams input node is null\n";
             return kTfLiteError;
         }
-        inputParams.push_back(input);
+        input_params_.push_back(input);
 
         if (dims.size() == 4) {
-            ov::AxisVector order;
-            order = {0, 3, 1, 2};
+            ov::AxisVector order = {0, 3, 1, 2};
             const auto order_node = std::make_shared<ov::opset8::Constant>(
                 ov::element::i64, ov::Shape{order.size()}, order);
             auto interim = std::make_shared<ov::opset3::Transpose>(input, order_node);
-            nodeManager->setOutputAtOperandIndex(index, interim);
+            node_manager_->setOutputAtOperandIndex(index, interim);
             return kTfLiteOk;
         }
 
-        nodeManager->setOutputAtOperandIndex(index, input);
+        node_manager_->setOutputAtOperandIndex(index, input);
         return kTfLiteOk;
     }
 
-    TfLiteStatus createConstNode(const TfLiteOpaqueContext* context, const int index) {
+    TfLiteStatus CreateConstNode(const TfLiteOpaqueContext* context, const int index) {
         const TfLiteOpaqueTensor* t = TfLiteOpaqueContextGetOpaqueTensor(context, index);
         int32_t num_dims;
         num_dims = TfLiteOpaqueTensorNumDims(t);
@@ -59,46 +62,54 @@ public:
         for (int i = 0; i < num_dims; i++) {
             dims[i]  = TfLiteOpaqueTensorDim(t,i);
         }
+
+        if (dims.size() <= 0) return kTfLiteError;
+
         const void* data = TfLiteOpaqueTensorData(t);
-        auto constNode = std::make_shared<ov::opset8::Constant>(
+        if (data == NULL) {
+            return kTfLiteError;
+        }
+
+        auto const_node = std::make_shared<ov::opset8::Constant>(
             ov::element::f32, ov::Shape(dims.begin(), dims.end()), data);
-        if (constNode == NULL) {
+        if (const_node == NULL) {
             TFLITE_LOG(INFO) << "Error in creating const node\n";
             return kTfLiteError;
         }
-        nodeManager->setOutputAtOperandIndex(index, constNode);
+        node_manager_->setOutputAtOperandIndex(index, const_node);
         return kTfLiteOk;
     }
 
-    void updateResultNodes(const TfLiteOpaqueContext* context, std::vector<int> outputs) {
+    void UpdateResultNodes(const TfLiteOpaqueContext* context, std::vector<int> outputs) {
         for (auto o : outputs) {
-            auto outNode = nodeManager->getInterimNodeOutput(o);
-            auto dims = outNode->get_shape();
+            auto out_node = node_manager_->getInterimNodeOutput(o);
+            auto dims = out_node->get_shape();
             if (dims.size() == 4) {
                 ov::AxisVector order;
                 order = {0, 2, 3, 1};
                 const auto order_node = std::make_shared<ov::opset8::Constant>(
                     ov::element::i64, ov::Shape{order.size()}, order);
-                outNode = std::make_shared<ov::opset3::Transpose>(outNode, order_node);
+                out_node = std::make_shared<ov::opset3::Transpose>(out_node, order_node);
             }
-            resultNodes.push_back(outNode);
+            result_nodes_.push_back(out_node);
         }
     }
 
-    std::vector<std::shared_ptr<ov::Node>> getResultNodes() { return resultNodes; }
+    std::vector<std::shared_ptr<ov::Node>> getResultNodes() { return result_nodes_; }
 
-    std::vector<std::shared_ptr<ov::opset3::Parameter>> getInputParams() { return inputParams; }
+    std::vector<std::shared_ptr<ov::opset3::Parameter>> getInputParams() { return input_params_; }
 
-    TfLiteStatus createNodeFromTfLiteOp(int node_id, TfLiteRegistrationExternal* registration,
+    size_t getNodeManagerSize() const { return node_manager_->getNodeCount(); }
+
+    TfLiteStatus CreateNodeFromTfLiteOp(int node_id, TfLiteRegistrationExternal* registration,
                                         TfLiteOpaqueNode* node, TfLiteOpaqueContext* context);
-    std::shared_ptr<OperationsBase> createOpClass(int operationIndex,
+    std::shared_ptr<OperationsBase> CreateOpClass(int operationIndex,
                                                     TfLiteRegistrationExternal* registration);
-    std::vector<std::shared_ptr<ov::opset3::Parameter>> inputParams;
-    std::vector<std::shared_ptr<ov::Node>> resultNodes;
 
 private:
-    std::shared_ptr<ov::Node> resultNode;
-    std::shared_ptr<NodeManager> nodeManager;
+    std::shared_ptr<NodeManager> node_manager_;
+    std::vector<std::shared_ptr<ov::opset3::Parameter>> input_params_;
+    std::vector<std::shared_ptr<ov::Node>> result_nodes_;
 };
 }  // namespace openvinodelegate
 }  // namespace tflite

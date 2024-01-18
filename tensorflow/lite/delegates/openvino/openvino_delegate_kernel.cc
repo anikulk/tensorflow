@@ -24,12 +24,12 @@ TfLiteStatus OpenVINODelegateKernel::Init(TfLiteOpaqueContext* context,
     TFLITE_LOG(INFO) << "Openvino delegate Kernel Init function called"
                      << "\n";
     // Should we do some NPU Init here.
-    TfLiteStatus init_status = ov_delegate_manager->openvino_delegate_init();
+    TfLiteStatus init_status = ov_delegate_core_->OpenVINODelegateInit();
     if (init_status != kTfLiteOk) {
         return init_status;
     }
 
-    TfLiteStatus set_status = ov_delegate_manager->createGraphfromTfLite(context, params);
+    TfLiteStatus set_status = ov_delegate_core_->CreateGraphfromTfLite(context, params);
     if (set_status != kTfLiteOk) {
         return set_status;
     }
@@ -45,10 +45,10 @@ TfLiteStatus OpenVINODelegateKernel::Prepare(TfLiteOpaqueContext* context, TfLit
 
 TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteOpaqueContext* context, TfLiteOpaqueNode* node) {
     TFLITE_LOG(INFO) << "inside Eval \n";
-    std::vector<int> compute_inputs = ov_delegate_manager->getComputeInputs();
+    std::vector<int> compute_inputs = ov_delegate_core_->getComputeInputs();
     size_t i = 0;
     for (int t : compute_inputs) {
-        ov::Tensor inputBlob = ov_delegate_manager->inferRequest.get_input_tensor(i++);
+        ov::Tensor inputBlob = ov_delegate_core_->getInferRequest().get_input_tensor(i++);
         uint8_t* dest = (uint8_t*)inputBlob.data<float>();
 
         const TfLiteOpaqueTensor* opaque_input_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, t);
@@ -58,12 +58,12 @@ TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteOpaqueContext* context, TfLiteOp
         float* src = (float*)srcPtr;
         std::memcpy((uint8_t*)dest, (uint8_t*)srcPtr, len);
     }
-    ov_delegate_manager->inferRequest.start_async();
-    ov_delegate_manager->inferRequest.wait_for(std::chrono::milliseconds(10000));
-    std::vector<int> outputs = ov_delegate_manager->getOutputs();
+    ov_delegate_core_->getInferRequest().start_async();
+    ov_delegate_core_->getInferRequest().wait_for(std::chrono::milliseconds(10000));
+    std::vector<int> outputs = ov_delegate_core_->getOutputs();
     size_t o = 0;
     for (int t : outputs) {
-        ov::Tensor outputBlob = ov_delegate_manager->inferRequest.get_output_tensor(o);
+        ov::Tensor outputBlob = ov_delegate_core_->getInferRequest().get_output_tensor(o);
         const TfLiteOpaqueTensor* opaque_output_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, *(outputs.begin()));
         void* srcPtr = TfLiteOpaqueTensorData(opaque_output_tensor);
         uint8_t* dest = (uint8_t*)outputBlob.data<float>();

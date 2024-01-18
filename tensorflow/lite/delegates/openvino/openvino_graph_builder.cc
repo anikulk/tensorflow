@@ -3,29 +3,28 @@
 namespace tflite {
 namespace openvinodelegate {
 
-TfLiteStatus OpenVINOGraphBuilder::createNodeFromTfLiteOp(int node_id,
+TfLiteStatus OpenVINOGraphBuilder::CreateNodeFromTfLiteOp(int node_id,
                                                           TfLiteRegistrationExternal* registration,
                                                           TfLiteOpaqueNode* node,
                                                           TfLiteOpaqueContext* context) {
-    auto operationNode = createOpClass(node_id, registration);
-    if (!operationNode) return kTfLiteError;
-    operationNode->nodeManager = nodeManager;
-    operationNode->SetContext(context);
+    auto operation_node = CreateOpClass(node_id, registration);
+    if (!operation_node) return kTfLiteError;
+    operation_node->SetGraphData(context, node_manager_.get());
     const int* inputs_data;
-    int inputs_size;
-    TfLiteStatus tf_status = TfLiteOpaqueNodeInputs(node, &inputs_data, &inputs_size);
-    void* builtin_data = TfLiteOpaqueNodeGetBuiltinData(node);
-    operationNode->UpdateNodeInfo((void*)(inputs_data), inputs_size, builtin_data);
-    resultNode = operationNode->createNode();
-    if (resultNode == nullptr) return kTfLiteError;
+    int num_inputs;
+    TfLiteStatus status = TfLiteOpaqueNodeInputs(node, &inputs_data, &num_inputs);
+    operation_node->UpdateNodeInfo((void*)inputs_data, num_inputs, TfLiteOpaqueNodeGetBuiltinData(node));
+    std::shared_ptr<ov::Node> result_node = operation_node->CreateNode();
+    if (result_node == nullptr) return kTfLiteError;
     const int* outputs;
     int num_outputs;
-    tf_status = TfLiteOpaqueNodeOutputs(node,
+    TfLiteStatus tf_status = TfLiteOpaqueNodeOutputs(node,
                                     &outputs,&num_outputs);
-    nodeManager->setOutputAtOperandIndex(outputs[0], resultNode);
+    node_manager_->setOutputAtOperandIndex(outputs[0], result_node);
     return kTfLiteOk;
 }
-std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::createOpClass(
+
+std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
     int operationIndex, TfLiteRegistrationExternal* registration) {
     switch (TfLiteRegistrationExternalGetBuiltInCode(registration)) {
         case kTfLiteBuiltinAdd: {

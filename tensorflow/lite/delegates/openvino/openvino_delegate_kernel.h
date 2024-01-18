@@ -33,7 +33,7 @@ namespace openvinodelegate {
 class OpenVINODelegateKernel : public SimpleOpaqueDelegateKernelInterface {
 public:
     explicit OpenVINODelegateKernel()
-        : ov_delegate_manager(std::make_unique<OpenVINODelegateManager>("")) {}
+        : ov_delegate_core_(std::make_unique<OpenVINODelegateCore>("")) {}
 
     TfLiteStatus Init(TfLiteOpaqueContext* context, const TfLiteOpaqueDelegateParams* params) override;
 
@@ -44,7 +44,7 @@ public:
                                               TfLiteFusedActivation activation);
 
 private:
-    std::unique_ptr<OpenVINODelegateManager> ov_delegate_manager;
+    std::unique_ptr<OpenVINODelegateCore> ov_delegate_core_;
 };
 
 }  // namespace openvinodelegate
