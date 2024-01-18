@@ -514,6 +514,8 @@ cc_library_with_tflite(
         "//tensorflow/lite/core/api",
         "//tensorflow/lite/core/api:verifier",
         "//tensorflow/lite/core/c:common",
+        "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
+        "//tensorflow/lite/nnapi:nnapi_implementation",
         "//tensorflow/lite/experimental/resource",
         "//tensorflow/lite/internal:signature_def",
         "//tensorflow/lite/profiling:root_profiler",
@@ -1355,6 +1357,7 @@ tflite_cc_shared_object(
         ":tflite_exported_symbols.lds",
         ":tflite_version_script.lds",
         "//tensorflow/lite/kernels:builtin_ops_all_linked",
+        "//tensorflow/lite/delegates/gpu:delegate",
     ],
 )
 
