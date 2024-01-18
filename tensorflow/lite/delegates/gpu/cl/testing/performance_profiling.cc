@@ -35,6 +35,8 @@ absl::Status RunPredefinedLayoutSample(const std::string& model_name) {
   auto flatbuffer = tflite::FlatBufferModel::BuildFromFile(model_name.c_str());
   GraphFloat32 graph_cl;
   ops::builtin::BuiltinOpResolver op_resolver;
+  TfLiteRegistration reg = { nullptr, nullptr, nullptr, nullptr };
+  op_resolver.AddCustom("Convolution2DTransposeBias", &reg);
   RETURN_IF_ERROR(BuildFromFlatBuffer(*flatbuffer, op_resolver, &graph_cl,
                                       /*allow_quant_ops=*/true));
 
@@ -79,6 +81,8 @@ absl::Status RunExternalImmutableSample(const std::string& model_name) {
   auto flatbuffer = tflite::FlatBufferModel::BuildFromFile(model_name.c_str());
   GraphFloat32 graph_cl;
   ops::builtin::BuiltinOpResolver op_resolver;
+  TfLiteRegistration reg = { nullptr, nullptr, nullptr, nullptr };
+  op_resolver.AddCustom("Convolution2DTransposeBias", &reg);
   RETURN_IF_ERROR(BuildFromFlatBuffer(*flatbuffer, op_resolver, &graph_cl,
                                       /*allow_quant_ops*/ true));
 
@@ -131,6 +135,8 @@ absl::Status RunSerializedTest(const std::string& model_name) {
   auto flatbuffer = tflite::FlatBufferModel::BuildFromFile(model_name.c_str());
   GraphFloat32 graph_cl;
   ops::builtin::BuiltinOpResolver op_resolver;
+  TfLiteRegistration reg = { nullptr, nullptr, nullptr, nullptr };
+  op_resolver.AddCustom("Convolution2DTransposeBias", &reg);
   RETURN_IF_ERROR(BuildFromFlatBuffer(*flatbuffer, op_resolver, &graph_cl,
                                       /*allow_quant_ops*/ true));
 
@@ -276,6 +282,8 @@ absl::Status RunModelSample(const std::string& model_name) {
   auto flatbuffer = tflite::FlatBufferModel::BuildFromFile(model_name.c_str());
   GraphFloat32 graph_cl;
   ops::builtin::BuiltinOpResolver op_resolver;
+  TfLiteRegistration reg = { nullptr, nullptr, nullptr, nullptr };
+  op_resolver.AddCustom("Convolution2DTransposeBias", &reg);
   RETURN_IF_ERROR(BuildFromFlatBuffer(*flatbuffer, op_resolver, &graph_cl,
                                       /*allow_quant_ops*/ true));
 
