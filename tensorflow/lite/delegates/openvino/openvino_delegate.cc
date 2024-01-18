@@ -48,6 +48,17 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
             return false;
             }
         case kTfLiteBuiltinConv2d: {
+                const int* inputs;
+                int num_inputs;
+                auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
+                int input_id = inputs[0];
+                int filter_id = inputs[1];
+                int bias_id = inputs[2];
+
+                if (!CheckInputsType(input_id, context, kTfLiteFloat32) ||
+                    !CheckInputsType(filter_id, context, kTfLiteFloat32) ||
+                    !CheckInputsType(bias_id, context, kTfLiteFloat32))
+                    return false;
             return true;
         }
         case kTfLiteBuiltinDepthwiseConv2d: {
