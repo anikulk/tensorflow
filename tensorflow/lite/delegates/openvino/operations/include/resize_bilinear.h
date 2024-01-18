@@ -9,7 +9,7 @@ namespace openvinodelegate {
 class ResizeBilinear : public OperationsBase {
 public:
     ResizeBilinear(int operationIndex) {}
-    std::shared_ptr<ov::Node> createNode() override;
+    std::shared_ptr<ov::Node> CreateNode() override;
 };
 
 }  // namespace openvinodelegate
