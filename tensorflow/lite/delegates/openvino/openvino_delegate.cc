@@ -14,7 +14,6 @@ limitations under the License.
 ==============================================================================*/
 #include "openvino_delegate.h"
 
-#include <ie_cnn_network.h>
 
 #include "openvino/runtime/core.hpp"
 #include "tensorflow/lite/builtin_ops.h"
@@ -48,14 +47,17 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
             return false;
             }
         case kTfLiteBuiltinConv2d: {
-                int input_id = node->inputs->data[0];
-                int filter_id = node->inputs->data[1];
-                int bias_id = node->inputs->data[2];
+            	const int* inputs;
+                int num_inputs;
+                auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
+                int input_id = inputs[0];
+                int filter_id = inputs[1];
+                int bias_id = inputs[2];
 
                 if (!CheckInputsType(input_id, context, kTfLiteFloat32) ||
                     !CheckInputsType(filter_id, context, kTfLiteFloat32) ||
                     !CheckInputsType(bias_id, context, kTfLiteFloat32))
-                    return false;
+                return false;
             return true;
         }
         case kTfLiteBuiltinDepthwiseConv2d: {

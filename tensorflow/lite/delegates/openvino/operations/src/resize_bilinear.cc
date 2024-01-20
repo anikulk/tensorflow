@@ -30,7 +30,7 @@ std::shared_ptr<ov::Node> ResizeBilinear::CreateNode() {
     auto axes_node = CreateConstNode(ov::element::i32, {2}, axes_vec);
     if (axes_node == nullptr) TFLITE_LOG(INFO) << "axes node is null \n";
 
-    uint32_t* size_data = new uint32_t(2);
+    int32_t* size_data = new int32_t(2);
     GetTensorData(TFLITE_INPUT_NODE_2, (void*)size_data);
     std::vector<int32_t> size_vec = {size_data[0], size_data[1]};
     auto size_node = CreateConstNode(ov::element::i32, {2}, size_vec);

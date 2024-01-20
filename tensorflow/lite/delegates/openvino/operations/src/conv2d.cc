@@ -26,15 +26,15 @@ std::shared_ptr<ov::Node> Conv2D::CreateNode() {
   padding_end = {padding_bottom, padding_right};
   dilations = {(size_t)conv2d_params->dilation_height_factor,
                (size_t)conv2d_params->dilation_width_factor};
-  auto input_node = getInputNode(tensor_indices[TFLITE_INPUT_NODE_1]);
-  auto filter_node = getInputNode(tensor_indices[TFLITE_FILTER_NODE]);
-  auto bias_node = getInputNode(tensor_indices[TFLITE_BIAS_NODE]);
+  auto input_node = getInputNode(tensor_indices_[TFLITE_INPUT_NODE_1]);
+  auto filter_node = getInputNode(tensor_indices_[TFLITE_FILTER_NODE]);
+  auto bias_node = getInputNode(tensor_indices_[TFLITE_BIAS_NODE]);
 
   auto conv_node = std::make_shared<ov::opset8::Convolution>(
       input_node, filter_node, ov::Strides(strides),
       ov::CoordinateDiff(padding_begin), ov::CoordinateDiff(padding_end),
       ov::Strides(dilations), auto_pad);
-  auto bias_dims = GetDims(tensor_indices[TFLITE_BIAS_NODE]);
+  auto bias_dims = GetDims(tensor_indices_[TFLITE_BIAS_NODE]);
   std::vector<uint32_t> shape(conv_node->get_shape().size(), 1);
   shape[1] = bias_dims[0];
   auto shape_node =
