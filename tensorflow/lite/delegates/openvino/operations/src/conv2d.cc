@@ -29,6 +29,10 @@ std::shared_ptr<ov::Node> Conv2D::CreateNode() {
   auto input_node = getInputNode(tensor_indices_[TFLITE_INPUT_NODE_1]);
   auto filter_node = getInputNode(tensor_indices_[TFLITE_FILTER_NODE]);
   auto bias_node = getInputNode(tensor_indices_[TFLITE_BIAS_NODE]);
+  ov::AxisVector order = {0, 3, 1, 2};
+  const auto order_node =
+        ov::opset3::Constant::create(ov::element::i64, ov::Shape{order.size()}, order);
+  filter_node = std::make_shared<ov::opset3::Transpose>(filter_node, order_node);
 
   auto conv_node = std::make_shared<ov::opset8::Convolution>(
       input_node, filter_node, ov::Strides(strides),
