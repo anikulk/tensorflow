@@ -261,7 +261,7 @@ TfLiteDelegatePtr CreateCoreMlDelegate() {
   return tools::CreateNullDelegate();
 #endif  // REAL_IPHONE_DEVICE
 }
-TfLiteDelegatePtr CreateOPENVINODelegate() {
+/*TfLiteDelegatePtr CreateOPENVINODelegate() {
   TfLiteOpenVINODelegateOptions openvino_options =
       TfLiteOpenVINODelegateOptionsDefault();
   return CreateOPENVINODelegate(&openvino_options);
@@ -273,7 +273,7 @@ TfLiteDelegatePtr CreateOPENVINODelegate(
   return TfLiteDelegatePtr(openvino_delegate, [](TfLiteDelegate* delegate) {
     TfLiteDeleteOpenVINODelegate(delegate);
   });
-}
+}*/
 
 }  // namespace evaluation
 }  // namespace tflite
