@@ -1357,7 +1357,7 @@ tflite_cc_shared_object(
         ":tflite_exported_symbols.lds",
         ":tflite_version_script.lds",
         "//tensorflow/lite/kernels:builtin_ops_all_linked",
-        "//tensorflow/lite/delegates/gpu:delegate",
+        #"//tensorflow/lite/delegates/gpu:delegate",
     ],
 )
 
