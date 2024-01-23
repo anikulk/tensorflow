@@ -60,6 +60,9 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
                 return false;
             return true;
         }
+        case kTfLiteBuiltinConcatenation: {
+            return true;
+        }
         case kTfLiteBuiltinDepthwiseConv2d: {
             return true;
         }
