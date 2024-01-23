@@ -41,19 +41,19 @@ cc_library_with_tflite(
 # A convenient library for all inference execution providers.
 cc_library_with_tflite(
     name = "tflite_execution_providers",
-    copts = tflite_copts() + ["-fexceptions"],
+    copts = tflite_copts(),
     tflite_deps = [
         ":xnnpack_delegate_provider",
         ":delegate_provider_lib",
     ],
     deps = [
- 	":coreml_delegate_provider",
+	":coreml_delegate_provider",
 	":default_execution_provider",
 	":hexagon_delegate_provider",
-        ":external_delegate_provider",
+    ":external_delegate_provider",
 	":gpu_delegate_provider",
-        ":nnapi_delegate_provider",
-        "//tensorflow/lite/tools/delegates/experimental/stable_delegate:delegate_provider",
+    ":nnapi_delegate_provider",
+    "//tensorflow/lite/tools/delegates/experimental/stable_delegate:delegate_provider",
     ],
     alwayslink = 1,
 )
@@ -73,7 +73,7 @@ cc_library_with_tflite(
 cc_library(
     name = "gpu_delegate_provider",
     srcs = ["gpu_delegate_provider.cc"],
-    copts = common_copts + ["-fexceptions"] + select({
+    copts = common_copts + select({
         "//tensorflow:ios": [
             "-xobjective-c++",
         ],
@@ -86,8 +86,8 @@ cc_library(
         ":delegate_provider_hdr",
         "//tensorflow/lite/tools/evaluation:utils",
     ] + select({
-    	    "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
-	    "//tensorflow/lite/delegates/gpu:delegate",
+        "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
+        "//tensorflow/lite/delegates/gpu:delegate",
         ],
         "//conditions:default": [],
       }) + select({
@@ -105,7 +105,7 @@ cc_library(
 cc_library(
     name = "nnapi_delegate_provider",
     srcs = ["nnapi_delegate_provider.cc"],
-    copts = common_copts + ["-fexceptions"],
+    copts = common_copts,
     deps = [
         ":delegate_provider_hdr",
         "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
@@ -120,7 +120,7 @@ cc_library(
 cc_library(
     name = "hexagon_delegate_provider",
     srcs = ["hexagon_delegate_provider.cc"],
-    copts = common_copts + ["-fexceptions"],
+    copts = common_copts,
     deps = [
         ":delegate_provider_hdr",
         "//tensorflow/lite/tools/evaluation:utils",

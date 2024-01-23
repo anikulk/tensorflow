@@ -173,7 +173,7 @@ def _tf_repositories():
     tf_http_archive(
         name = "cpuinfo",
         strip_prefix = "cpuinfo-959002f82d7962a473d8bf301845f2af720e0aa4",
-        patch_file = ["//third_party:cpuinfo.patch"],
+        #patch_file = ["//third_party:cpuinfo.patch"],
         sha256 = "a0f53ccfb477c57753c595df02bf79ed67bf092fd9a5c61ec5b8992b81bc1e65",
         urls = tf_mirror_urls("https://github.com/pytorch/cpuinfo/archive/959002f82d7962a473d8bf301845f2af720e0aa4.zip"),
     )

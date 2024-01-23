@@ -56,7 +56,7 @@ cc_library_with_stable_tflite_abi(
              "//tensorflow/lite/delegates/gpu:supports_gpu_delegate": [
 	     "//tensorflow/lite/delegates/gpu:delegate",
 	     ],
-     "//conditions:default": [],
+        "//conditions:default": [],
      }) + select({
         "//tensorflow:arm_any": [
             "//tensorflow/lite/delegates/hexagon:hexagon_delegate",
