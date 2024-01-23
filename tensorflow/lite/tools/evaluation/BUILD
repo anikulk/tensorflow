@@ -43,7 +43,6 @@ cc_library_with_stable_tflite_abi(
     copts = tflite_copts() + ["-fexceptions"],
     non_stable_abi_deps = [
         "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
-        "//tensorflow/lite/delegates/openvino:openvino_delegate",
     ] + select({
         "//tensorflow:ios": [
             "//tensorflow/lite/delegates/coreml:coreml_delegate",

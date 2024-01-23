@@ -182,7 +182,6 @@ cc_library(
     deps = [
         ":delegate_provider_hdr",
        "//tensorflow/lite/delegates/openvino:openvino_delegate",
-        "//tensorflow/lite/tools/evaluation:utils",
     ],
     alwayslink = 1,
 )
