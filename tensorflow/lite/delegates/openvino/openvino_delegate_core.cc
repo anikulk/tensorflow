@@ -60,7 +60,7 @@ TfLiteStatus OpenVINODelegateCore::CreateGraphfromTfLite(TfLiteOpaqueContext* co
     std::shared_ptr<ov::Model> model = std::make_shared<ov::Model>(
         openvino_graph_builder_->getResultNodes(), openvino_graph_builder_->getInputParams());
     // TODO: get device string from flags
-    std::string deviceStr = "NPU";
+    std::string deviceStr = "CPU";
     if (model) {
         compiled_model_ = openvino_delegate_core_.compile_model(model, deviceStr);
         ov::pass::Manager manager;
