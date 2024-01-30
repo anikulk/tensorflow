@@ -13,6 +13,7 @@ cc_library(
         "src/concat.cc",
         "src/depthwise_conv2d.cc",
         "src/resize_bilinear.cc",
+        "src/dequantize.cc",
     ],
     hdrs = [
         "include/add.h",
@@ -20,6 +21,7 @@ cc_library(
         "include/concat.h",
         "include/depthwise_conv2d.h",
         "include/resize_bilinear.h",
+        "include/dequantize.h",
         "operations_base.h",
         "openvino_node_manager.h",
     ],

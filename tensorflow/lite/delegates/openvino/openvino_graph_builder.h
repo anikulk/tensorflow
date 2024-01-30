@@ -13,6 +13,7 @@
 #include "tensorflow/lite/delegates/openvino/operations/include/concat.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/depthwise_conv2d.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/resize_bilinear.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/dequantize.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
 #include "tensorflow/lite/tools/logging.h"
 
@@ -43,10 +44,12 @@ public:
         input_params_.push_back(input);
 
         if (dims.size() == 4) {
+            std::cout<<"---enter transpose in inputparams---------" << index << std::endl;
             ov::AxisVector order = {0, 3, 1, 2};
             const auto order_node = std::make_shared<ov::opset8::Constant>(
                 ov::element::i64, ov::Shape{order.size()}, order);
             auto interim = std::make_shared<ov::opset3::Transpose>(input, order_node);
+            std::cout<<"---exit transpose in inputparams---------" << index << std::endl;
             node_manager_->setOutputAtOperandIndex(index, interim);
             return kTfLiteOk;
         }
@@ -56,6 +59,7 @@ public:
     }
 
     TfLiteStatus CreateConstNode(const TfLiteOpaqueContext* context, const int index) {
+        std::cout << "--************-CreateConstNode----" << index <<std::endl;
         const TfLiteOpaqueTensor* t = TfLiteOpaqueContextGetOpaqueTensor(context, index);
         int32_t num_dims;
         num_dims = TfLiteOpaqueTensorNumDims(t);
@@ -78,10 +82,12 @@ public:
             return kTfLiteError;
         }
         node_manager_->setOutputAtOperandIndex(index, const_node);
+        std::cout << "-****************8--CreateConstNode exit----" << index <<std::endl;
         return kTfLiteOk;
     }
 
     void UpdateResultNodes(const TfLiteOpaqueContext* context, std::vector<int> outputs) {
+        std::cout<< " update Result nodes Enter ------" << std::endl;
         for (auto o : outputs) {
             auto out_node = node_manager_->getInterimNodeOutput(o);
             auto dims = out_node->get_shape();
@@ -93,12 +99,19 @@ public:
                 out_node = std::make_shared<ov::opset3::Transpose>(out_node, order_node);
             }
             result_nodes_.push_back(out_node);
+            auto _shape = out_node->get_shape();
+            std::cout << "---out node shape--- " << _shape[0] << " "<<  _shape[1] << " "<< _shape[2] << " "<< _shape[3] << std::endl;
         }
+         
+        std::cout<< " update Result nodes Exit ------" << std::endl;
     }
 
     std::vector<std::shared_ptr<ov::Node>> getResultNodes() { return result_nodes_; }
 
-    std::vector<std::shared_ptr<ov::opset3::Parameter>> getInputParams() { return input_params_; }
+    std::vector<std::shared_ptr<ov::opset3::Parameter>> getInputParams() { 
+        auto _shape = input_params_[0]->get_shape();
+        std::cout << "---input_params_ node shape--- " << _shape[0] << " "<<  _shape[1] << " "<< _shape[2] << " "<< _shape[3] << std::endl;
+        return input_params_; }
 
     size_t getNodeManagerSize() const { return node_manager_->getNodeCount(); }
 

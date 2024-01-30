@@ -59,16 +59,21 @@ TfLiteStatus OpenVINODelegateCore::CreateGraphfromTfLite(TfLiteOpaqueContext* co
     openvino_graph_builder_->UpdateResultNodes(context, outputs_);
     std::shared_ptr<ov::Model> model = std::make_shared<ov::Model>(
         openvino_graph_builder_->getResultNodes(), openvino_graph_builder_->getInputParams());
+
+    std::cout << "------------model--------\n"; 
     // TODO: get device string from flags
     std::string deviceStr = "CPU";
     if (model) {
+        std::cout << "------------compiled_model_ start--------\n";
         compiled_model_ = openvino_delegate_core_.compile_model(model, deviceStr);
+        std::cout << "------------compiled_model_ done--------\n";
         ov::pass::Manager manager;
         manager.register_pass<ov::pass::Serialize>("/tmp/model.xml", "/tmp/model.bin");
         manager.run_passes(model);
     }
 
     infer_request_ = compiled_model_.create_infer_request();
+    
     return kTfLiteOk;
 }
 

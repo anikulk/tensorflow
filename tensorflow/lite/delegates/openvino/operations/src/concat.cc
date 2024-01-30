@@ -4,6 +4,7 @@ namespace tflite {
 namespace openvinodelegate {
 
 std::shared_ptr<ov::Node> Concat::CreateNode() {
+     std::cout << "---create node Concat Enter-----" << std::endl;
   TfLiteConcatenationParams* concat_params = (TfLiteConcatenationParams*)GetBuiltinData();
   auto inputNode1 =
       getInputNode(tensor_indices_[0]);
@@ -15,6 +16,8 @@ std::shared_ptr<ov::Node> Concat::CreateNode() {
       TFLITE_LOG(INFO) << "input Node 2 is null\n";
 
     int axis = concat_params->axis;
+    std::cout << "-------axis --------- " << axis << std::endl;
+    axis = 1;
     size_t n = tensor_indices_size_;
     std::vector<ov::Output<ov::Node>> inputs;
     for (size_t i = 0; i < n; i++) {
@@ -25,6 +28,8 @@ std::shared_ptr<ov::Node> Concat::CreateNode() {
   auto concatNode = std::make_shared<ov::opset8::Concat>(
         inputs, axis);
   auto outputNode = ApplyActivation(concatNode, concat_params->activation);
+
+  std::cout << "---create node Concat Exit-----" << std::endl;
   return outputNode;
 }
 

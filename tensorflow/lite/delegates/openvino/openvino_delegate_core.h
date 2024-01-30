@@ -14,7 +14,7 @@ namespace tflite {
 namespace openvinodelegate {
 class OpenVINODelegateCore {
 public:
-    OpenVINODelegateCore(std::string_view plugins_path) : openvino_delegate_core_(ov::Core()) {
+    OpenVINODelegateCore(std::string_view plugins_path) : openvino_delegate_core_(ov::Core("/usr/local/runtime/lib/intel64/plugins.xml")) {
         plugins_location_ = plugins_path;
     }
     TfLiteStatus OpenVINODelegateInit() {

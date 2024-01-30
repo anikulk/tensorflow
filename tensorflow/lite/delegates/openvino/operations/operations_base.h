@@ -89,6 +89,7 @@ protected:
     }
 
     std::vector<int> GetDims(int index) {
+        std::cout << "----- get dims index--------" << index << std::endl; 
         auto t = TfLiteOpaqueContextGetOpaqueTensor(context_, index);
         int32_t num_dims;
         num_dims = TfLiteOpaqueTensorNumDims(t);

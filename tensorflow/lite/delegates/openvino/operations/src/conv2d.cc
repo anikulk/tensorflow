@@ -4,6 +4,7 @@ namespace tflite {
 namespace openvinodelegate {
 
 std::shared_ptr<ov::Node> Conv2D::CreateNode() {
+  std::cout << "---create node Conv2d Enter-----" << std::endl;
   const TfLiteConvParams* conv2d_params = (TfLiteConvParams*)GetBuiltinData();
   std::vector<int> filter_dims = GetDims(tensor_indices_[TFLITE_FILTER_NODE]);
   std::vector<size_t> strides;
@@ -39,6 +40,10 @@ std::shared_ptr<ov::Node> Conv2D::CreateNode() {
       ov::CoordinateDiff(padding_begin), ov::CoordinateDiff(padding_end),
       ov::Strides(dilations), auto_pad);
   auto bias_dims = GetDims(tensor_indices_[TFLITE_BIAS_NODE]);
+
+  auto _shape = conv_node->get_shape();
+            std::cout << "---Conv out node shape--- " << _shape[0] << " "<<  _shape[1] << " "<< _shape[2] << " "<< _shape[3] << std::endl;
+
   std::vector<uint32_t> shape(conv_node->get_shape().size(), 1);
   shape[1] = bias_dims[0];
   auto shape_node =
@@ -46,10 +51,15 @@ std::shared_ptr<ov::Node> Conv2D::CreateNode() {
 
   bias_node =
       std::make_shared<ov::opset3::Reshape>(bias_node, shape_node, true);
+  _shape = bias_node->get_shape();
+            std::cout << "---Bias out node shape--- " << _shape[0] << " "<<  _shape[1] << " "<< _shape[2] << " "<< _shape[3] << std::endl;
 
   std::shared_ptr<ov::Node> outputNode = std::make_shared<ov::opset3::Add>(
       conv_node, bias_node, ov::op::AutoBroadcastType::NUMPY);
 
+  _shape = outputNode->get_shape();
+            std::cout << "---Conv out node shape--- " << _shape[0] << " "<<  _shape[1] << " "<< _shape[2] << " "<< _shape[3] << std::endl;
+  std::cout << "---create node Conv2d Exit------------" << std::endl;
   return ApplyActivation(outputNode, conv2d_params->activation);
 
 }
