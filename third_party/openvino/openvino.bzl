@@ -1,5 +1,6 @@
 def _openvino_native_impl(repository_ctx):
-    openvino_native_dir = repository_ctx.os.environ["OPENVINO_NATIVE_DIR"]
+    openvino_native_dir = "/home/adattatr/openvino_install/openvino"
+    #repository_ctx.os.environ["OPENVINO_NATIVE_DIR"]
     repository_ctx.symlink(openvino_native_dir, "openvino")
     repository_ctx.file("BUILD", """
 cc_library(
