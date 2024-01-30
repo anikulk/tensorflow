@@ -146,7 +146,6 @@ cc_library(
 
 tflite_cc_shared_object(
     name = "tensorflowlite_openvino_stable_delegate",
-    testonly = True,
     linkopts = tflite_linkopts_no_undefined() + select({
         "//tensorflow:windows": [],
         "//conditions:default": [
@@ -160,6 +159,9 @@ tflite_cc_shared_object(
         "//tensorflow/lite/delegates/utils/experimental/stable_delegate:version_script.lds",
     ],
 )
+
+load("@rules_coverity//coverity:defs.bzl","cov_gen_script")
+cov_gen_script(name="coverity-target", deps=["tensorflowlite_openvino_stable_delegate"])
 
 cc_library(
     name = "openvino_delegate_provider",
