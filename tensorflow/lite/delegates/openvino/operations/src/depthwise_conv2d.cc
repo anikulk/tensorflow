@@ -40,7 +40,7 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::CreateNode() {
     }
 
     //TODO: lookout for order while running with an actual graph
-    ov::AxisVector order = {1,0,2,3};
+    ov::AxisVector order = {3,0,1,2};
     const auto order_node = std::make_shared<ov::opset8::Constant>(
         ov::element::i64, ov::Shape{order.size()}, order);
     filter_node = std::make_shared<ov::opset3::Transpose>(filter_node, order_node);
