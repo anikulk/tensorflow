@@ -16,7 +16,7 @@ load("//tensorflow/tools/toolchains/embedded/arm-linux:arm_linux_toolchain_confi
 load("//third_party:repo.bzl", "tf_http_archive", "tf_mirror_urls")
 load("//third_party/clang_toolchain:cc_configure_clang.bzl", "cc_download_clang_toolchain")
 load("//tensorflow/tools/def_file_filter:def_file_filter_configure.bzl", "def_file_filter_configure")
-#load("//third_party/llvm:setup.bzl", "llvm_setup")
+load("//third_party/llvm:setup.bzl", "llvm_setup")
 
 # Import third party repository rules. See go/tfbr-thirdparty.
 load("//third_party/FP16:workspace.bzl", FP16 = "repo")
@@ -447,7 +447,7 @@ def _tf_repositories():
         urls = tf_mirror_urls("https://github.com/antirez/linenoise/archive/4ce393a66b10903a0ef52edf9775ed526a17395f.tar.gz"),
     )
 
-    # llvm_setup(name = "llvm-project")
+    llvm_setup(name = "llvm-project")
 
     # Intel openMP that is part of LLVM sources.
     tf_http_archive(
