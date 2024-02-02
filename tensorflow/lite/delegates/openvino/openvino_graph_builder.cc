@@ -44,6 +44,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
             return std::make_shared<ResizeBilinear>(operationIndex);
             ;
         }
+        case kTfLiteBuiltinRelu: {
+            return std::make_shared<Relu>(operationIndex);
+        }
         default:
             return nullptr;
     }
