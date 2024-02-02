@@ -72,6 +72,9 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
         case kTfLiteBuiltinRelu: {
             return true;
         }
+        case kTfLiteBuiltinRelu6: {
+            return true;
+        }
         default:
             return false;
     }
