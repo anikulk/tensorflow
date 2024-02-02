@@ -15,7 +15,7 @@ def nativewindow_linkopts():
 def gpu_delegate_linkopts():
     """Additional link options needed when linking in the GPU Delegate."""
     return select({
-        "//tensorflow/lite/delegates/gpu:force_enable_gpu_delegate": [
+        "//tensorflow:android": [
             "-lEGL",
             # We don't need to link libGLESv3, because if it exists,
             # it is a symlink to libGLESv2.

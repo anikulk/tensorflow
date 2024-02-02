@@ -7,20 +7,24 @@ load(
     "//tensorflow/core/platform:build_config_root.bzl",
     "tf_gpu_tests_tags",
 )
+
 package(
     # copybara:uncomment default_applicable_licenses = ["//tensorflow:license"],
     default_visibility = ["//visibility:public"],
     licenses = ["notice"],
 )
+
 exports_files([
     "delegate.h",
     "delegate_options.h",
     "metal_delegate.h",
 ])
+
 config_setting(
     name = "tflite_gpu_binary_release",
     values = {"copt": "-DTFLITE_GPU_BINARY_RELEASE"},
 )
+
 config_setting(
     name = "tflite_gpu_extra_gles_deps",
     values = {
@@ -29,10 +33,18 @@ config_setting(
     },
 )
 
-config_setting(
-    name = "force_enable_gpu_delegate",
-    values = {"copt": "-DFORCE_ENABLE_GPU_DELEGATE"},
-)
+# copybara:uncomment_begin(google-only)
+# config_setting(
+#     name = "tflite_gpu_angle",
+#     flag_values = {
+#         "//tools/cpp:cc_target_os": "linux-google",
+#         "//third_party/angle:use_angle": "True",
+#     },
+#     values = {
+#         "cpu": "k8",
+#     },
+# )
+# copybara:uncomment_end
 
 cc_library(
     name = "gl_delegate",
@@ -216,7 +228,6 @@ selects.config_setting_group(
     name = "supports_gpu_delegate",
     match_any = [
         "//tensorflow:android",
-        "//tensorflow/lite/delegates/gpu:force_enable_gpu_delegate",
         "//tensorflow/lite/delegates/gpu/cl:opencl_delegate_no_gl",
     ],
 )

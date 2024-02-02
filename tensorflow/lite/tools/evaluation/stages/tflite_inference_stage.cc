@@ -140,8 +140,6 @@ TfLiteStatus TfliteInferenceStage::Init(
     resolver_ = std::make_unique<
         ops::builtin::BuiltinOpResolverWithoutDefaultDelegates>();
   }
-  TfLiteRegistration reg = { nullptr, nullptr, nullptr, nullptr };
-  resolver_->AddCustom("Convolution2DTransposeBias", &reg);
   RegisterSelectedOps(resolver_.get());
   InterpreterBuilder(*model_, *resolver_)(&interpreter_);
   if (!interpreter_) {

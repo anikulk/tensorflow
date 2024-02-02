@@ -60,11 +60,7 @@ void RegisterSelectedOps(::tflite::MutableOpResolver* resolver);
 // library with another definition of this function (presumably to actually
 // register custom ops), that version will be used instead.
 void ABSL_ATTRIBUTE_WEAK
-RegisterSelectedOps(::tflite::MutableOpResolver* resolver) {
-  static TfLiteRegistration reg = { nullptr, nullptr, nullptr, nullptr };
-  resolver->AddCustom("Convolution2DTransposeBias",
-                      &reg);
-}
+RegisterSelectedOps(::tflite::MutableOpResolver* resolver) {}
 
 namespace tflite {
 namespace benchmark {
