@@ -100,6 +100,29 @@ def build_model(op_type):
 
             print(f"model saved at {export_dir}")
 
+    if (op_type == "logistic"):
+            input_shape = (5, 5, 1)
+            x_train = tf.random.normal(input_shape, mean = 0.0, stddev = 1.0)
+
+            in_layer = tf.keras.layers.Input(shape=input_shape)
+            logistic_layer = tf.keras.activations.sigmoid(in_layer)
+            model = tf.keras.Model(in_layer, logistic_layer)
+            model.compile(loss = 'categorical_crossentropy', optimizer='adam', metrics = ['accuracy'])
+            for layer in model.layers:
+                print(layer.output_shape)
+            model.summary()
+
+            export_dir = os.path.join(os.getcwd(), op_type)
+            os.makedirs(export_dir, exist_ok=True)
+            tf.saved_model.save(model, export_dir)
+            converter = tf.lite.TFLiteConverter.from_saved_model(export_dir)
+            tflite_model = converter.convert()
+            tflite_file = os.path.join(export_dir, 'logistic_model.tflite')
+            with open(tflite_file, 'wb') as f:
+                f.write(tflite_model)
+
+            print(f"model saved at {export_dir}")
+
 def main():
     print(f"building {sys.argv[1]}")
     build_model(sys.argv[1])
