@@ -80,6 +80,9 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
         case kTfLiteBuiltinAdd: {
             return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}, {kTfLiteFloat32}});
         }
+        case kTfLiteBuiltinAveragePool2d: {
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
+        }
         case kTfLiteBuiltinConv2d: {
             return CheckDataTypeSupported(context, node,
                                           {{kTfLiteFloat32}, {kTfLiteFloat32}, {kTfLiteFloat32}}) &&

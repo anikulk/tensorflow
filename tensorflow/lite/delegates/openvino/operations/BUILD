@@ -9,6 +9,7 @@ cc_library(
     name = "operations_base",
     srcs = [
         "src/add.cc",
+        "src/average_pool_2d.cc",
         "src/conv2d.cc",
         "src/concat.cc",
         "src/depthwise_conv2d.cc",
@@ -23,6 +24,7 @@ cc_library(
     ],
     hdrs = [
         "include/add.h",
+        "include/average_pool_2d.h",
         "include/conv2d.h",
         "include/concat.h",
         "include/depthwise_conv2d.h",

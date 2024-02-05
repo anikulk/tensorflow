@@ -50,14 +50,14 @@ protected:
         return std::make_shared<ov::opset8::Constant>(elementType, shape, data);
     }
 
-    TfLiteStatus CalculatePadding(TfLitePadding padding, std::string& auto_pad) {
+    TfLiteStatus CalculatePadding(TfLitePadding padding,  ov::op::PadType &auto_pad) {
         switch (padding) {
             case kTfLitePaddingSame: {
-                auto_pad = "same-upper";
+                auto_pad = ov::op::PadType::SAME_UPPER;
                 return kTfLiteOk;
             }
             case kTfLitePaddingValid: {
-                auto_pad = "valid";
+                auto_pad = ov::op::PadType::VALID;
                 return kTfLiteOk;
             }
             default:

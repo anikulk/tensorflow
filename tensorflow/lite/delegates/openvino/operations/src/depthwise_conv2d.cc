@@ -23,20 +23,13 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::CreateNode() {
         has_bias = true;
     }
 
-    std::string auto_pad;
-    ov::op::PadType pad_type;
+    ov::op::PadType auto_pad;
     auto input_dims = GetDims(tensor_indices_[TFLITE_INPUT_NODE_1]);
 
     TfLiteStatus status = CalculatePadding(depth_conv2dParams->padding, auto_pad);
     if (status != kTfLiteOk) {
-        TFLITE_LOG(INFO) << "Invalid padding type in depthwise conv2d\n";
+        TFLITE_LOG(ERROR) << "Invalid padding type in depthwise conv2d\n";
         return nullptr;
-    }
-
-    if (auto_pad == "same-upper") {
-        pad_type = ov::op::PadType::SAME_UPPER;
-    } else if (auto_pad == "valid") {
-        pad_type = ov::op::PadType::VALID;
     }
 
     ov::AxisVector order = {3, 0, 1, 2};
@@ -56,7 +49,7 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::CreateNode() {
 
     auto depthwise_conv_node = std::make_shared<ov::opset3::GroupConvolution>(
         input_node, filter_node, ov::Strides(strides), ov::CoordinateDiff(0, 0),
-        ov::CoordinateDiff(0, 0), ov::Strides(dilations), pad_type);
+        ov::CoordinateDiff(0, 0), ov::Strides(dilations), auto_pad);
 
     if (has_bias) {
         auto bias_dimensions = GetDims(tensor_indices_[TFLITE_BIAS_NODE]);

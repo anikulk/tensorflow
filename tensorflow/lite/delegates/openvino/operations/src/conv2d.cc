@@ -13,11 +13,10 @@ std::shared_ptr<ov::Node> Conv2D::CreateNode() {
     int filter_size = 0;
     int padding_top, padding_bottom, padding_left, padding_right = 0;
 
-    if (conv2d_params->padding == kTfLitePaddingUnknown) {
-    } else if (conv2d_params->padding == kTfLitePaddingSame) {
-        auto_pad = ov::op::PadType::SAME_UPPER;
-    } else if (conv2d_params->padding == kTfLitePaddingValid) {
-        auto_pad = ov::op::PadType::VALID;
+    TfLiteStatus status = CalculatePadding(conv2d_params->padding, auto_pad);
+    if (status != kTfLiteOk) {
+        TFLITE_LOG(ERROR) << "Invalid padding type in conv2d\n";
+        return nullptr;
     }
 
     strides = {(size_t)conv2d_params->stride_height, (size_t)conv2d_params->stride_width};

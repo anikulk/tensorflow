@@ -30,6 +30,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinAdd: {
             return std::make_shared<Add>(operationIndex);
         }
+        case kTfLiteBuiltinAveragePool2d: {
+            return std::make_shared<AveragePool2D>(operationIndex);
+        }
         case kTfLiteBuiltinConv2d: {
             return std::make_shared<Conv2D>(operationIndex);
         }
