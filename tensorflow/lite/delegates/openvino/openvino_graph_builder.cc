@@ -50,6 +50,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinRelu6: {
             return std::make_shared<Relu>(operationIndex);
         }
+        case kTfLiteBuiltinLogistic: {
+            return std::make_shared<Logistic>(operationIndex);
+        }
         default:
             return nullptr;
     }
