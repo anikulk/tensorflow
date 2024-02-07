@@ -19,7 +19,8 @@ std::shared_ptr<ov::Node> Concat::CreateNode() {
         return inputNode2;
     }
 
-    int axis = concat_params->axis;
+    //TODO: Replace the hard coded value with logic.
+    int axis = 1;
     size_t n = tensor_indices_size_;
     std::vector<ov::Output<ov::Node>> inputs;
     for (size_t i = 0; i < n; i++) { 
