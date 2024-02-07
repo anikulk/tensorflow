@@ -19,6 +19,7 @@ cc_library(
         "src/relu.cc",
         "src/relu6.cc",
         "src/resize_bilinear.cc",
+        "src/softmax.cc",
     ],
     hdrs = [
         "include/add.h",
@@ -32,6 +33,7 @@ cc_library(
         "include/relu.h",
         "include/relu6.h",
         "include/resize_bilinear.h",
+        "include/softmax.h",
         "operations_base.h",
         "openvino_node_manager.h",
     ],

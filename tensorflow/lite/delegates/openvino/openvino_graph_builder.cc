@@ -63,6 +63,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinHardSwish: {
             return std::make_shared<HardSwish>(operationIndex);
         }
+        case kTfLiteBuiltinSoftmax: {
+            return std::make_shared<Softmax>(operationIndex);
+        }
         default:
             return nullptr;
     }

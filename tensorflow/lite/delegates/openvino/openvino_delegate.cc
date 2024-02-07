@@ -128,6 +128,9 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
                 return true;
             return false;
         }
+	case kTfLiteBuiltinSoftmax: {
+            return true;
+        }
         default:
             return false;
     }
