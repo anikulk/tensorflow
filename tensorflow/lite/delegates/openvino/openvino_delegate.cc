@@ -81,6 +81,9 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
         case kTfLiteBuiltinLogistic: {
             return true;
         }
+        case kTfLiteBuiltinHardSwish: {
+            return true;
+        }
         default:
             return false;
     }

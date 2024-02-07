@@ -13,6 +13,7 @@
 #include "tensorflow/lite/delegates/openvino/operations/include/concat.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/depthwise_conv2d.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/dequantize.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/hardswish.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/logistic.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/resize_bilinear.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu.h"

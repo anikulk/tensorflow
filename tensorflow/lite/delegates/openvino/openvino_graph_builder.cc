@@ -57,6 +57,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinLogistic: {
             return std::make_shared<Logistic>(operationIndex);
         }
+        case kTfLiteBuiltinHardSwish: {
+            return std::make_shared<HardSwish>(operationIndex);
+        }
         default:
             return nullptr;
     }
