@@ -18,6 +18,7 @@
 #define TFLITE_INPUT_NODE_2 1
 #define TFLITE_FILTER_NODE 1
 #define TFLITE_BIAS_NODE 2
+#define TFLITE_SHAPE_NODE 1
 
 namespace tflite {
 namespace openvinodelegate {

@@ -72,6 +72,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinTanh: {
             return std::make_shared<Tanh>(operationIndex);
         }
+        case kTfLiteBuiltinReshape: {
+            return std::make_shared<Reshape>(operationIndex);
+        }
         default:
             return nullptr;
     }

@@ -19,6 +19,7 @@
 #include "tensorflow/lite/delegates/openvino/operations/include/mul.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu6.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/reshape.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/resize_bilinear.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/softmax.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/tanh.h"
