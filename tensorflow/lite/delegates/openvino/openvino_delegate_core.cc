@@ -5,12 +5,12 @@ namespace tflite {
 namespace openvinodelegate {
 
 TfLiteStatus OpenVINODelegateCore::CreateGraphfromTfLite(TfLiteOpaqueContext* context,
-                                                            const TfLiteOpaqueDelegateParams* params) {
+                                                         const TfLiteOpaqueDelegateParams* params) {
     const std::unordered_set<int> inputs(&params->input_tensors->data[0],
                                          &params->input_tensors->data[params->input_tensors->size]);
 
-  openvino_graph_builder_ =
-      std::make_unique<OpenVINOGraphBuilder>(std::make_unique<NodeManager>());
+    openvino_graph_builder_ =
+        std::make_unique<OpenVINOGraphBuilder>(std::make_unique<NodeManager>());
 
     for (int o = 0; o < params->output_tensors->size; o++) {
         const int output_tensor_idx = params->output_tensors->data[o];
@@ -21,21 +21,24 @@ TfLiteStatus OpenVINODelegateCore::CreateGraphfromTfLite(TfLiteOpaqueContext* co
         const int delegate_node_id = params->nodes_to_replace->data[i];
         TfLiteOpaqueNode* delegate_node;
         TfLiteRegistrationExternal* delegate_node_registration;
-        if(TfLiteOpaqueContextGetNodeAndRegistration(context, delegate_node_id, &delegate_node, &delegate_node_registration))
-             return kTfLiteError;
+        if (TfLiteOpaqueContextGetNodeAndRegistration(context, delegate_node_id, &delegate_node,
+                                                      &delegate_node_registration))
+            return kTfLiteError;
 
         int inputs_size = TfLiteOpaqueNodeNumberOfInputs(delegate_node);
         for (int k = 0; k < inputs_size; k++) {
-            if (TfLiteRegistrationExternalGetBuiltInCode(delegate_node_registration) == kTfLiteBuiltinTransposeConv && k == 0) {
-
+            if (TfLiteRegistrationExternalGetBuiltInCode(delegate_node_registration) ==
+                    kTfLiteBuiltinTransposeConv &&
+                k == 0) {
                 continue;
             }
             const int* inputs_data;
             int num_inputs;
-            TfLiteStatus tf_status = TfLiteOpaqueNodeInputs(delegate_node, &inputs_data, &num_inputs);
+            TfLiteStatus tf_status =
+                TfLiteOpaqueNodeInputs(delegate_node, &inputs_data, &num_inputs);
             const int t = inputs_data[k];
             const void* data = nullptr;
-            auto opaque_tensor =  TfLiteOpaqueContextGetOpaqueTensor(context, t);
+            auto opaque_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, t);
             auto allocation_type = TfLiteOpaqueTensorGetAllocationType(opaque_tensor);
             if (allocation_type == kTfLiteMmapRo) {
                 data = TfLiteOpaqueTensorData(opaque_tensor);

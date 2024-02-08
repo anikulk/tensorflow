@@ -51,7 +51,8 @@ TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteOpaqueContext* context, TfLiteOp
         ov::Tensor inputBlob = ov_delegate_core_->getInferRequest().get_input_tensor(i++);
         uint8_t* dest = (uint8_t*)inputBlob.data<float>();
 
-        const TfLiteOpaqueTensor* opaque_input_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, t);
+        const TfLiteOpaqueTensor* opaque_input_tensor =
+            TfLiteOpaqueContextGetOpaqueTensor(context, t);
         auto len = TfLiteOpaqueTensorByteSize(opaque_input_tensor);
         void* srcPtr = TfLiteOpaqueTensorData(opaque_input_tensor);
 
@@ -64,7 +65,8 @@ TfLiteStatus OpenVINODelegateKernel::Eval(TfLiteOpaqueContext* context, TfLiteOp
     size_t o = 0;
     for (int t : outputs) {
         ov::Tensor outputBlob = ov_delegate_core_->getInferRequest().get_output_tensor(o);
-        const TfLiteOpaqueTensor* opaque_output_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, *(outputs.begin()));
+        const TfLiteOpaqueTensor* opaque_output_tensor =
+            TfLiteOpaqueContextGetOpaqueTensor(context, *(outputs.begin()));
         void* srcPtr = TfLiteOpaqueTensorData(opaque_output_tensor);
         uint8_t* dest = (uint8_t*)outputBlob.data<float>();
         auto len = TfLiteOpaqueTensorByteSize(opaque_output_tensor);

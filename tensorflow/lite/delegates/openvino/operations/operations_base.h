@@ -6,10 +6,10 @@
 #include <openvino/opsets/opset8.hpp>
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/builtin_op_data.h"
-#include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/c/c_api.h"
 #include "tensorflow/lite/c/c_api_opaque.h"
 #include "tensorflow/lite/c/c_api_types.h"
+#include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
 #include "tensorflow/lite/kernels/padding.h"
 #include "tensorflow/lite/tools/logging.h"
@@ -30,8 +30,8 @@ public:
         SetBuiltinData(builtin_data);
     }
     void SetGraphData(const TfLiteOpaqueContext* context, NodeManager* node_manager) {
-      context_ = context;
-      node_manager_ = node_manager;
+        context_ = context;
+        node_manager_ = node_manager;
     }
     virtual std::shared_ptr<ov::Node> CreateNode() = 0;
 
@@ -94,13 +94,13 @@ protected:
         num_dims = TfLiteOpaqueTensorNumDims(t);
         std::vector<int> dims(num_dims);
         for (int i = 0; i < num_dims; i++) {
-            dims[i]  = TfLiteOpaqueTensorDim(t,i);
+            dims[i] = TfLiteOpaqueTensorDim(t, i);
         }
         return dims;
     }
 
     void GetTensorData(int index, void* data) {
-        auto opaque_tensor =  TfLiteOpaqueContextGetOpaqueTensor(context_, index);
+        auto opaque_tensor = TfLiteOpaqueContextGetOpaqueTensor(context_, index);
         void* tensor_data = TfLiteOpaqueTensorData(opaque_tensor);
         auto size = TfLiteOpaqueTensorByteSize(opaque_tensor);
         std::memcpy(data, tensor_data, size);

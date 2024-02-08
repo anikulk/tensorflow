@@ -7,11 +7,11 @@ namespace tflite {
 namespace openvinodelegate {
 
 class Concat : public OperationsBase {
-public: 
-    Concat(int operationIndex) { }
+public:
+    Concat(int operationIndex) {}
     std::shared_ptr<ov::Node> CreateNode() override;
 };
 
 }  // namespace openvinodelegate
 }  // namespace tflite
-#endif //TENSORFLOW_LITE_DELEGATES_OPENVINO_CONCAT_H_
+#endif  // TENSORFLOW_LITE_DELEGATES_OPENVINO_CONCAT_H_

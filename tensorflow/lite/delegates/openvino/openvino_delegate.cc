@@ -14,7 +14,6 @@ limitations under the License.
 ==============================================================================*/
 #include "openvino_delegate.h"
 
-
 #include "openvino/runtime/core.hpp"
 #include "tensorflow/lite/builtin_ops.h"
 #include "tensorflow/lite/c/builtin_op_data.h"
@@ -26,60 +25,92 @@ limitations under the License.
 
 namespace tflite {
 namespace openvinodelegate {
-bool OpenVINODelegate::CheckInputsType(int tensor_id, TfLiteOpaqueContext* context, TfLiteType expected_type) const{
-    const TfLiteOpaqueTensor* opaque_tensor = TfLiteOpaqueContextGetOpaqueTensor(context, tensor_id);
+bool OpenVINODelegate::CheckInputsType(const int tensor_id, const TfLiteOpaqueContext* context,
+                                       TfLiteType expected_type) const {
+    const TfLiteOpaqueTensor* opaque_tensor =
+        TfLiteOpaqueContextGetOpaqueTensor(context, tensor_id);
     TfLiteType type = TfLiteOpaqueTensorType(opaque_tensor);
     return expected_type == type;
 }
 
-bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
-                                TfLiteOpaqueContext* context) const{
+bool OpenVINODelegate::CheckDataTypeSupported(
+    const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
+    std::vector<std::vector<TfLiteType>> supported_types) const {
+    const int* inputs;
+    int num_inputs;
+    auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
+    TFLITE_LOG(INFO) << "check data type support" << supported_types.size() << "\n";
+    for (int i = 0; i < supported_types.size(); i++) {
+        int tensor_id = inputs[i];
+        bool supported = false;
+        for (TfLiteType type : supported_types[i])
+            supported = CheckInputsType(tensor_id, context, type);
+        TFLITE_LOG(INFO) << "supported is " << supported << "\n";
+        if (supported == false) return false;
+    }
+    return true;
+}
+
+bool OpenVINODelegate::CheckDims(const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
+                                 std::vector<std::vector<int>> dims_size) const {
+    const int* inputs;
+    int num_inputs;
+    bool supported;
+    auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
+    TFLITE_LOG(INFO) << "inside check dims \n";
+    for (int i = 0; i < dims_size.size(); i++) {
+        supported = false;
+        const TfLiteOpaqueTensor* opaque_tensor =
+            TfLiteOpaqueContextGetOpaqueTensor(context, inputs[i]);
+        for (int j = 0; j < dims_size[i].size(); j++) {
+            if (TfLiteOpaqueTensorNumDims(opaque_tensor) == dims_size[i][j]) {
+                TFLITE_LOG(INFO) << "num_dims " << TfLiteOpaqueTensorNumDims(opaque_tensor) << "\n";
+                supported = true;
+                int size = 1;
+                for (int k = 0; k < dims_size[i][j]; k++)
+                    size *= TfLiteOpaqueTensorDim(opaque_tensor, k);
+                TFLITE_LOG(INFO) << "size is " << size << "\n";
+                if (size == 0) return false;
+            }
+        }
+        if (supported == false) return false;
+    }
+    return supported;
+}
+
+bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration,
+                                                  const TfLiteOpaqueNode* node,
+                                                  TfLiteOpaqueContext* context) const {
     switch (TfLiteRegistrationExternalGetBuiltInCode(registration)) {
         case kTfLiteBuiltinAdd: {
-            const int* inputs;
-            int num_inputs;
-            auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
-            int tensor_id1 = inputs[0];
-            int tensor_id2 = inputs[1];
-            if (CheckInputsType(tensor_id1, context, kTfLiteFloat32) &&
-                CheckInputsType(tensor_id2, context, kTfLiteFloat32))
-                return true;
-            return false;
-            }
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}, {kTfLiteFloat32}});
+        }
         case kTfLiteBuiltinConv2d: {
-            	const int* inputs;
-                int num_inputs;
-                auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
-                int input_id = inputs[0];
-                int filter_id = inputs[1];
-                int bias_id = inputs[2];
-
-                if (!CheckInputsType(input_id, context, kTfLiteFloat32) ||
-                    !CheckInputsType(filter_id, context, kTfLiteFloat32) ||
-                    !CheckInputsType(bias_id, context, kTfLiteFloat32))
-                return false;
-            return true;
+            return CheckDataTypeSupported(context, node,
+                                          {{kTfLiteFloat32}, {kTfLiteFloat32}, {kTfLiteFloat32}}) &&
+                   CheckDims(context, node, {{4}, {4}});
         }
         case kTfLiteBuiltinConcatenation: {
-            return true;
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}, {kTfLiteFloat32}});
         }
         case kTfLiteBuiltinDepthwiseConv2d: {
-            return true;
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}, {kTfLiteFloat32}}) &&
+                   CheckDims(context, node, {{4}, {4}});
         }
         case kTfLiteBuiltinDequantize: {
-            return true;
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat16}});
         }
         case kTfLiteBuiltinResizeBilinear: {
-            return true;
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
         }
         case kTfLiteBuiltinRelu: {
-            return true;
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
         }
         case kTfLiteBuiltinRelu6: {
-            return true;
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
         }
         case kTfLiteBuiltinLogistic: {
-            return true;
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
         }
         case kTfLiteBuiltinHardSwish: {
             return true;
@@ -89,17 +120,19 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
     }
 }
 
-bool OpenVINODelegate::IsNodeSupportedByDelegate(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
-                                TfLiteOpaqueContext* context) const{
+bool OpenVINODelegate::IsNodeSupportedByDelegate(const TfLiteRegistrationExternal* registration,
+                                                 const TfLiteOpaqueNode* node,
+                                                 TfLiteOpaqueContext* context) const {
     bool check = CheckNodeSupportByOpenVINO(registration, node, context);
     return check;
 }
 
 TfLiteStatus OpenVINODelegate::Initialize(TfLiteOpaqueContext* context) { return kTfLiteOk; }
 
-const char* OpenVINODelegate::Name() const{ return "OpenVINO SimpleOpaqueDelegate"; }
+const char* OpenVINODelegate::Name() const { return "OpenVINO SimpleOpaqueDelegate"; }
 
-std::unique_ptr<tflite::SimpleOpaqueDelegateKernelInterface> OpenVINODelegate::CreateDelegateKernelInterface() {
+std::unique_ptr<tflite::SimpleOpaqueDelegateKernelInterface>
+OpenVINODelegate::CreateDelegateKernelInterface() {
     return std::unique_ptr<tflite::openvinodelegate::OpenVINODelegateKernel>(
         new tflite::openvinodelegate::OpenVINODelegateKernel());
 }
@@ -109,7 +142,7 @@ std::unique_ptr<tflite::SimpleOpaqueDelegateKernelInterface> OpenVINODelegate::C
 TfLiteDelegate* TFL_CAPI_EXPORT
 TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions* options) {
     auto ovdelegate_ = std::make_unique<tflite::openvinodelegate::OpenVINODelegate>(options);
-    return  tflite::TfLiteOpaqueDelegateFactory::CreateSimpleDelegate(std::move(ovdelegate_));
+    return tflite::TfLiteOpaqueDelegateFactory::CreateSimpleDelegate(std::move(ovdelegate_));
 }
 
 void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteOpaqueDelegate* delegate) { return; }

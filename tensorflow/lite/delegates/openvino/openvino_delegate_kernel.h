@@ -35,7 +35,8 @@ public:
     explicit OpenVINODelegateKernel()
         : ov_delegate_core_(std::make_unique<OpenVINODelegateCore>("")) {}
 
-    TfLiteStatus Init(TfLiteOpaqueContext* context, const TfLiteOpaqueDelegateParams* params) override;
+    TfLiteStatus Init(TfLiteOpaqueContext* context,
+                      const TfLiteOpaqueDelegateParams* params) override;
 
     TfLiteStatus Prepare(TfLiteOpaqueContext* context, TfLiteOpaqueNode* node) override;
 

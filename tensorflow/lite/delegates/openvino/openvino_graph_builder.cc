@@ -13,13 +13,13 @@ TfLiteStatus OpenVINOGraphBuilder::CreateNodeFromTfLiteOp(int node_id,
     const int* inputs_data;
     int num_inputs;
     TfLiteStatus status = TfLiteOpaqueNodeInputs(node, &inputs_data, &num_inputs);
-    operation_node->UpdateNodeInfo((void*)inputs_data, num_inputs, TfLiteOpaqueNodeGetBuiltinData(node));
+    operation_node->UpdateNodeInfo((void*)inputs_data, num_inputs,
+                                   TfLiteOpaqueNodeGetBuiltinData(node));
     std::shared_ptr<ov::Node> result_node = operation_node->CreateNode();
     if (result_node == nullptr) return kTfLiteError;
     const int* outputs;
     int num_outputs;
-    TfLiteStatus tf_status = TfLiteOpaqueNodeOutputs(node,
-                                    &outputs,&num_outputs);
+    TfLiteStatus tf_status = TfLiteOpaqueNodeOutputs(node, &outputs, &num_outputs);
     node_manager_->setOutputAtOperandIndex(outputs[0], result_node);
     return kTfLiteOk;
 }

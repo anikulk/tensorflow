@@ -32,7 +32,8 @@ public:
 
     ov::InferRequest getInferRequest() const { return infer_request_; }
 
-    TfLiteStatus CreateGraphfromTfLite(TfLiteOpaqueContext* context, const TfLiteOpaqueDelegateParams* params);
+    TfLiteStatus CreateGraphfromTfLite(TfLiteOpaqueContext* context,
+                                       const TfLiteOpaqueDelegateParams* params);
 
 private:
     std::unique_ptr<OpenVINOGraphBuilder> openvino_graph_builder_;

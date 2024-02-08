@@ -9,15 +9,15 @@
 #include "tensorflow/lite/c/builtin_op_data.h"
 #include "tensorflow/lite/c/common.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/add.h"
-#include "tensorflow/lite/delegates/openvino/operations/include/conv2d.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/concat.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/conv2d.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/depthwise_conv2d.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/dequantize.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/hardswish.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/logistic.h"
-#include "tensorflow/lite/delegates/openvino/operations/include/resize_bilinear.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu6.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/resize_bilinear.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
 #include "tensorflow/lite/tools/logging.h"
 
@@ -26,16 +26,16 @@ namespace openvinodelegate {
 
 class OpenVINOGraphBuilder {
 public:
-  OpenVINOGraphBuilder(std::unique_ptr<NodeManager> node_manager) {
-    node_manager_ = std::move(node_manager);
-  }
+    OpenVINOGraphBuilder(std::unique_ptr<NodeManager> node_manager) {
+        node_manager_ = std::move(node_manager);
+    }
 
-  TfLiteStatus AddInputParams(const TfLiteOpaqueTensor* t, const int index) {
+    TfLiteStatus AddInputParams(const TfLiteOpaqueTensor* t, const int index) {
         int32_t num_dims = TfLiteOpaqueTensorNumDims(t);
         std::vector<int> dims(num_dims);
         for (int i = 0; i < num_dims; i++) {
-            dims[i]  = TfLiteOpaqueTensorDim(t,i);
-	}
+            dims[i] = TfLiteOpaqueTensorDim(t, i);
+        }
 
         if (dims.size() <= 0) return kTfLiteError;
 
@@ -66,7 +66,7 @@ public:
         num_dims = TfLiteOpaqueTensorNumDims(t);
         std::vector<int> dims(num_dims);
         for (int i = 0; i < num_dims; i++) {
-            dims[i]  = TfLiteOpaqueTensorDim(t,i);
+            dims[i] = TfLiteOpaqueTensorDim(t, i);
         }
 
         if (dims.size() <= 0) return kTfLiteError;
@@ -110,7 +110,7 @@ public:
     TfLiteStatus CreateNodeFromTfLiteOp(int node_id, TfLiteRegistrationExternal* registration,
                                         TfLiteOpaqueNode* node, TfLiteOpaqueContext* context);
     std::shared_ptr<OperationsBase> CreateOpClass(int operationIndex,
-                                                    TfLiteRegistrationExternal* registration);
+                                                  TfLiteRegistrationExternal* registration);
 
 private:
     std::shared_ptr<NodeManager> node_manager_;

@@ -5,16 +5,14 @@ namespace openvinodelegate {
 
 std::shared_ptr<ov::Node> Concat::CreateNode() {
     TfLiteConcatenationParams* concat_params = (TfLiteConcatenationParams*)GetBuiltinData();
-    auto inputNode1 =
-        getInputNode(tensor_indices_[0]);
-    if (inputNode1 == nullptr){
+    auto inputNode1 = getInputNode(tensor_indices_[0]);
+    if (inputNode1 == nullptr) {
         TFLITE_LOG(INFO) << "input node 1 is null\n";
         return inputNode1;
     }
-        
-    auto inputNode2 =
-        getInputNode(tensor_indices_[1]);
-    if (inputNode2 == nullptr){
+
+    auto inputNode2 = getInputNode(tensor_indices_[1]);
+    if (inputNode2 == nullptr) {
         TFLITE_LOG(INFO) << "input Node 2 is null\n";
         return inputNode2;
     }
@@ -23,13 +21,12 @@ std::shared_ptr<ov::Node> Concat::CreateNode() {
     int axis = 1;
     size_t n = tensor_indices_size_;
     std::vector<ov::Output<ov::Node>> inputs;
-    for (size_t i = 0; i < n; i++) { 
+    for (size_t i = 0; i < n; i++) {
         auto inputOp = getInputNode(tensor_indices_[i]);
         inputs.push_back(inputOp);
     }
 
-    auto concatNode = std::make_shared<ov::opset8::Concat>(
-        inputs, axis);
+    auto concatNode = std::make_shared<ov::opset8::Concat>(inputs, axis);
     auto outputNode = ApplyActivation(concatNode, concat_params->activation);
 
     return outputNode;

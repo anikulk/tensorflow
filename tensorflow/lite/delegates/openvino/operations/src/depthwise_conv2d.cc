@@ -39,16 +39,17 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::CreateNode() {
         pad_type = ov::op::PadType::VALID;
     }
 
-    //TODO: lookout for order while running with an actual graph
-    ov::AxisVector order = {3,0,1,2};
-    const auto order_node = std::make_shared<ov::opset8::Constant>(
-        ov::element::i64, ov::Shape{order.size()}, order);
+    ov::AxisVector order = {3, 0, 1, 2};
+    // Uncomment below line and comment above line for test mode
+    // ov::AxisVector order = {1,0,2,3};
+    const auto order_node =
+        std::make_shared<ov::opset8::Constant>(ov::element::i64, ov::Shape{order.size()}, order);
     filter_node = std::make_shared<ov::opset3::Transpose>(filter_node, order_node);
 
     std::vector<size_t> shape(&filter_node->get_shape()[0], &filter_node->get_shape()[0] + 4);
     auto num_groups = input_dims[3] / filter_node->get_shape()[1];
     shape.insert(shape.begin(), num_groups);
-    shape[1]  = filter_node->get_shape()[0] / num_groups;
+    shape[1] = filter_node->get_shape()[0] / num_groups;
     auto shape_node = CreateConstNode(ov::element::i32, ov::Shape{shape.size()}, shape);
 
     filter_node = std::make_shared<ov::opset3::Reshape>(filter_node, shape_node, true);
@@ -64,7 +65,7 @@ std::shared_ptr<ov::Node> DepthwiseConv2D::CreateNode() {
         auto shape_node = CreateConstNode(ov::element::i32, ov::Shape{shape.size()}, shape);
         bias_node = std::make_shared<ov::opset3::Reshape>(bias_node, shape_node, true);
         output_node = std::make_shared<ov::opset3::Add>(depthwise_conv_node, bias_node,
-                                                       ov::op::AutoBroadcastType::NUMPY);
+                                                        ov::op::AutoBroadcastType::NUMPY);
     } else {
         output_node = depthwise_conv_node;
     }

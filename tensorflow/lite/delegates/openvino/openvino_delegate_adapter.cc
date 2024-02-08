@@ -1,14 +1,14 @@
 #include <string>
 #include <vector>
 
+#include "tensorflow/lite/delegates/external/external_delegate_interface.h"
 #include "tensorflow/lite/delegates/openvino/openvino_delegate.h"
 #include "tensorflow/lite/tools/command_line_flags.h"
-#include "tensorflow/lite/delegates/external/external_delegate_interface.h"
 
-TfLiteDelegate *CreateOVDelegateFromOptions(const char* const* options_keys, const char* const* options_values,
-                                            size_t num_options) {
+TfLiteDelegate* CreateOVDelegateFromOptions(const char* const* options_keys,
+                                            const char* const* options_values, size_t num_options) {
     TfLiteOpenVINODelegateOptions options = TfLiteOpenVINODelegateOptionsDefault();
-    std::vector<const char *> argv;
+    std::vector<const char*> argv;
     int argc = num_options + 1;
     argv.reserve(num_options + 1);
     std::vector<std::string> option_args;
@@ -40,8 +40,7 @@ TfLiteDelegate *CreateOVDelegateFromOptions(const char* const* options_keys, con
         return nullptr;
     }
 
-    TFLITE_LOG(INFO) << "OpenVINO delegate: debug_level set to "
-                     << options.debug_level << ".";
+    TFLITE_LOG(INFO) << "OpenVINO delegate: debug_level set to " << options.debug_level << ".";
     /* TFLITE_LOG(INFO) << "OpenVINO delegate: plugins_path set to "
                      << options.plugins_path << ".";
     TFLITE_LOG(INFO) << "OpenVINO delegate: device_type set to "
@@ -54,17 +53,12 @@ extern "C" {
 
 // Defines two symbols that need to be exported to use the TFLite external
 // delegate. See tensorflow/lite/delegates/external for details.
-extern TFL_EXTERNAL_DELEGATE_EXPORT TfLiteDelegate*
-tflite_plugin_create_delegate(const char* const* options_keys,
-                              const char* const* options_values,
-                              size_t num_options,
-                              void (*report_error)(const char*)) {
-  return CreateOVDelegateFromOptions(
-      options_keys, options_values, num_options);
+extern TFL_EXTERNAL_DELEGATE_EXPORT TfLiteDelegate* tflite_plugin_create_delegate(
+    const char* const* options_keys, const char* const* options_values, size_t num_options,
+    void (*report_error)(const char*)) {
+    return CreateOVDelegateFromOptions(options_keys, options_values, num_options);
 }
 
-TFL_EXTERNAL_DELEGATE_EXPORT void tflite_plugin_destroy_delegate(
-    TfLiteDelegate* delegate) {
-}
+TFL_EXTERNAL_DELEGATE_EXPORT void tflite_plugin_destroy_delegate(TfLiteDelegate* delegate) {}
 
 }  // extern "C"

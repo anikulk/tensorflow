@@ -31,7 +31,7 @@ struct TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptions {
     int debug_level;
 
     /* path for the OpenVINO plugins */
-    char *plugins_path;
+    char* plugins_path;
 
     /* Device for OpenVINO to select
         Currently we support CPU and NPU
@@ -41,10 +41,10 @@ struct TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptions {
 
 TfLiteOpenVINODelegateOptions TFL_CAPI_EXPORT TfLiteOpenVINODelegateOptionsDefault();
 
-TfLiteOpaqueDelegate *TFL_CAPI_EXPORT
-TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions *options);
+TfLiteOpaqueDelegate* TFL_CAPI_EXPORT
+TfLiteCreateOpenVINODelegate(const TfLiteOpenVINODelegateOptions* options);
 
-void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteOpaqueDelegate *delegate);
+void TFL_CAPI_EXPORT TfLiteDeleteOpenVINODelegate(TfLiteOpaqueDelegate* delegate);
 
 namespace tflite {
 namespace openvinodelegate {
@@ -55,11 +55,18 @@ public:
         if (options == nullptr) options_ = TfLiteOpenVINODelegateOptionsDefault();
     }
 
-    bool CheckInputsType(int tensor_id, TfLiteOpaqueContext* context, TfLiteType expected_type) const;
-    bool CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
+    bool CheckInputsType(const int tensor_id, const TfLiteOpaqueContext* context,
+                         TfLiteType expected_type) const;
+    bool CheckDataTypeSupported(const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
+                                std::vector<std::vector<TfLiteType>> supported_types) const;
+    bool CheckDims(const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
+                   std::vector<std::vector<int>> dims_size) const;
+    bool CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration,
+                                    const TfLiteOpaqueNode* node,
                                     TfLiteOpaqueContext* context) const;
 
-    bool IsNodeSupportedByDelegate(const TfLiteRegistrationExternal* registration, const TfLiteOpaqueNode* node,
+    bool IsNodeSupportedByDelegate(const TfLiteRegistrationExternal* registration,
+                                   const TfLiteOpaqueNode* node,
                                    TfLiteOpaqueContext* context) const override;
 
     TfLiteStatus Initialize(TfLiteOpaqueContext* context) override;
