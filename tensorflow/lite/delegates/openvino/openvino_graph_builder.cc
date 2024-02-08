@@ -43,6 +43,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinDequantize: {
             return std::make_shared<Dequantize>(operationIndex);
             ;
+	}
+        case kTfLiteBuiltinMul: {
+            return std::make_shared<Mul>(operationIndex);
         }
         case kTfLiteBuiltinResizeBilinear: {
             return std::make_shared<ResizeBilinear>(operationIndex);

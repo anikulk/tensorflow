@@ -15,6 +15,7 @@
 #include "tensorflow/lite/delegates/openvino/operations/include/dequantize.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/hardswish.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/logistic.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/mul.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu6.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/resize_bilinear.h"

@@ -114,6 +114,19 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
         }
         case kTfLiteBuiltinHardSwish: {
             return true;
+	}
+        case kTfLiteBuiltinMul: {
+            const int* inputs;
+            int num_inputs;
+            auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
+            if (num_inputs != 2)
+                return false;
+            int tensor_id1 = inputs[0];
+            int tensor_id2 = inputs[1];
+            if (CheckInputsType(tensor_id1, context, kTfLiteFloat32) &&
+                CheckInputsType(tensor_id2, context, kTfLiteFloat32))
+                return true;
+            return false;
         }
         default:
             return false;
