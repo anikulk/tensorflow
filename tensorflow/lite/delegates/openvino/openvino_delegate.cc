@@ -135,6 +135,9 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
         case kTfLiteBuiltinReshape: {
             return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}, {kTfLiteInt32}});
         }
+        case kTfLiteBuiltinMaxPool2d: {
+           return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
+        }
         default:
             return false;
     }

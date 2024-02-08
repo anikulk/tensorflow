@@ -75,6 +75,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinReshape: {
             return std::make_shared<Reshape>(operationIndex);
         }
+        case kTfLiteBuiltinMaxPool2d: {
+            return std::make_shared<MaxPool2D>(operationIndex);
+        }
         default:
             return nullptr;
     }
