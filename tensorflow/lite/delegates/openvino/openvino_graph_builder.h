@@ -21,6 +21,7 @@
 #include "tensorflow/lite/delegates/openvino/operations/include/relu6.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/resize_bilinear.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/softmax.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/tanh.h"
 #include "tensorflow/lite/delegates/openvino/operations/openvino_node_manager.h"
 #include "tensorflow/lite/tools/logging.h"
 

@@ -112,7 +112,7 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
         }
         case kTfLiteBuiltinHardSwish: {
             return true;
-	}
+        }
         case kTfLiteBuiltinMul: {
             const int* inputs;
             int num_inputs;
@@ -126,8 +126,11 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
                 return true;
             return false;
         }
-	case kTfLiteBuiltinSoftmax: {
+        case kTfLiteBuiltinSoftmax: {
             return true;
+        }
+        case kTfLiteBuiltinTanh: {
+           return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
         }
         default:
             return false;
