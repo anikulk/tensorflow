@@ -16,9 +16,6 @@ std::shared_ptr<ov::Node> Mul::CreateNode() {
         return nullptr;
     }
 
-    input_node_1 = convertNHWCtoNCHW(TFLITE_INPUT_NODE_1, input_node_1);
-    input_node_2 = convertNHWCtoNCHW(TFLITE_INPUT_NODE_2, input_node_2);
-
     auto mul_node =
         std::make_shared<ov::opset3::Multiply>(input_node_1, input_node_2, ov::op::AutoBroadcastType::NUMPY);
     auto output_node = ApplyActivation(mul_node, mul_params->activation);

@@ -16,9 +16,6 @@ std::shared_ptr<ov::Node> Add::CreateNode() {
         return nullptr;
     }
 
-    input_node_1 = convertNHWCtoNCHW(TFLITE_INPUT_NODE_1, input_node_1);
-    input_node_2 = convertNHWCtoNCHW(TFLITE_INPUT_NODE_2, input_node_2);
-
     auto add_node = std::make_shared<ov::opset8::Add>(input_node_1, input_node_2,
                                                       ov::op::AutoBroadcastType::NUMPY);
     auto output_node = ApplyActivation(add_node, add_params->activation);

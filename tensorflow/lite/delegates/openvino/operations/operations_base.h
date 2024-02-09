@@ -106,29 +106,6 @@ protected:
         std::memcpy(data, tensor_data, size);
     }
 
-    std::shared_ptr<ov::Node> convertNHWCtoNCHW(int index, std::shared_ptr<ov::Node> input) {
-        auto node_dims = GetDims(tensor_indices_[index]);
-        ov::AxisVector order = {0, 3, 1, 2};
-        const auto order_node = std::make_shared<ov::opset8::Constant>(
-            ov::element::i64, ov::Shape{order.size()}, order);
-        if (node_dims.size() < 4 && node_dims.size() > 0) {
-            auto size = node_dims.size();
-            for (int i = 0; i < 4 - size; i++) {
-                node_dims.insert(node_dims.begin(), 1);
-            }
-            auto new_size = CreateConstNode(ov::element::i32, ov::Shape{4}, node_dims);
-            input = std::make_shared<ov::opset8::Reshape>(input, new_size, false);
-            input = std::make_shared<ov::opset3::Transpose>(input, order_node);
-        }
-        if (node_dims.size() == 5) {
-            order = {0, 4, 1, 2, 3};
-            const auto order_node = std::make_shared<ov::opset8::Constant>(
-                ov::element::i64, ov::Shape{order.size()}, order);
-            input = std::make_shared<ov::opset3::Transpose>(input, order_node);
-        }
-        return input;
-    }
-
     int* tensor_indices_;
     int tensor_indices_size_;
 

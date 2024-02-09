@@ -34,6 +34,26 @@ public:
         node_manager_ = std::move(node_manager);
     }
 
+    std::shared_ptr<ov::Node> convertNHWCtoNCHW(std::vector<int> node_dims, std::shared_ptr<ov::Node> input) {
+        ov::AxisVector order = {0, 3, 1, 2};
+        const auto order_node = std::make_shared<ov::opset8::Constant>(
+            ov::element::i32, ov::Shape{order.size()}, order);
+        if (node_dims.size() < 4 && node_dims.size() > 0) {
+            auto size = node_dims.size();
+            for (int i = 0; i < 4 - size; i++) {
+                node_dims.insert(node_dims.begin(), 1);
+            }
+            auto new_size = std::make_shared<ov::opset8::Constant>(ov::element::i32, ov::Shape{4}, node_dims);
+            input = std::make_shared<ov::opset8::Reshape>(input, new_size, false);
+        }
+        if (node_dims.size() == 5) {
+		TFLITE_LOG(ERROR) << "5D tensors are not supported\n";
+		return nullptr;
+        }
+        input = std::make_shared<ov::opset3::Transpose>(input, order_node);
+        return input;
+    }
+
     TfLiteStatus AddInputParams(const TfLiteOpaqueTensor* t, const int index) {
         int32_t num_dims = TfLiteOpaqueTensorNumDims(t);
         std::vector<int> dims(num_dims);
@@ -51,16 +71,8 @@ public:
         }
         input_params_.push_back(input);
 
-        if (dims.size() == 4) {
-            ov::AxisVector order = {0, 3, 1, 2};
-            const auto order_node = std::make_shared<ov::opset8::Constant>(
-                ov::element::i64, ov::Shape{order.size()}, order);
-            auto interim = std::make_shared<ov::opset3::Transpose>(input, order_node);
-            node_manager_->setOutputAtOperandIndex(index, interim);
-            return kTfLiteOk;
-        }
-
-        node_manager_->setOutputAtOperandIndex(index, input);
+        auto interim = convertNHWCtoNCHW(dims, input);
+        node_manager_->setOutputAtOperandIndex(index, interim);
         return kTfLiteOk;
     }
 

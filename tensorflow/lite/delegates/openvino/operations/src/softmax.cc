@@ -16,8 +16,6 @@ std::shared_ptr<ov::Node> Softmax::CreateNode() {
         return nullptr;
     }
 
-    input_node_1 = convertNHWCtoNCHW(TFLITE_INPUT_NODE_1, input_node_1);
-
     //NOTE: assumption here is: Tensorflow always computes softmax along channel(last) dimesnsion.
     //After transpose, our channel shifts to dim 1, which is default axis attribute for Softmax.
     auto softmax_node =
