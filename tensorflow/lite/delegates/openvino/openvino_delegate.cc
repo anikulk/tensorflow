@@ -39,13 +39,11 @@ bool OpenVINODelegate::CheckDataTypeSupported(
     const int* inputs;
     int num_inputs;
     auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
-    TFLITE_LOG(INFO) << "check data type support" << supported_types.size() << "\n";
     for (int i = 0; i < supported_types.size(); i++) {
         int tensor_id = inputs[i];
         bool supported = false;
         for (TfLiteType type : supported_types[i])
             supported = CheckInputsType(tensor_id, context, type);
-        TFLITE_LOG(INFO) << "supported is " << supported << "\n";
         if (supported == false) return false;
     }
     return true;
@@ -57,19 +55,16 @@ bool OpenVINODelegate::CheckDims(const TfLiteOpaqueContext* context, const TfLit
     int num_inputs;
     bool supported;
     auto tf_status = TfLiteOpaqueNodeInputs(node, &inputs, &num_inputs);
-    TFLITE_LOG(INFO) << "inside check dims \n";
     for (int i = 0; i < dims_size.size(); i++) {
         supported = false;
         const TfLiteOpaqueTensor* opaque_tensor =
             TfLiteOpaqueContextGetOpaqueTensor(context, inputs[i]);
         for (int j = 0; j < dims_size[i].size(); j++) {
             if (TfLiteOpaqueTensorNumDims(opaque_tensor) == dims_size[i][j]) {
-                TFLITE_LOG(INFO) << "num_dims " << TfLiteOpaqueTensorNumDims(opaque_tensor) << "\n";
                 supported = true;
                 int size = 1;
                 for (int k = 0; k < dims_size[i][j]; k++)
                     size *= TfLiteOpaqueTensorDim(opaque_tensor, k);
-                TFLITE_LOG(INFO) << "size is " << size << "\n";
                 if (size == 0) return false;
             }
         }

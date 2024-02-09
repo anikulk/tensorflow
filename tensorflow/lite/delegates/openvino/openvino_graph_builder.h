@@ -65,6 +65,7 @@ public:
     TfLiteStatus CreateConstNode(const TfLiteOpaqueContext* context, const int index) {
         const TfLiteOpaqueTensor* t = TfLiteOpaqueContextGetOpaqueTensor(context, index);
         int32_t num_dims;
+	ov::element::Type ov_element_type;
         num_dims = TfLiteOpaqueTensorNumDims(t);
         std::vector<int> dims(num_dims);
         for (int i = 0; i < num_dims; i++) {
@@ -78,8 +79,54 @@ public:
             return kTfLiteError;
         }
 
+	TfLiteType tensor_type = TfLiteOpaqueTensorType(t);
+	switch (tensor_type) {
+            case kTfLiteFloat32:
+		    ov_element_type = ov::element::f32;
+		    break;
+	    case kTfLiteInt32:
+		    ov_element_type = ov::element::i32;
+		    break;
+	    case kTfLiteUInt8:
+		    ov_element_type = ov::element::u8;
+		    break;
+	    case kTfLiteInt64:
+		    ov_element_type = ov::element::i64;
+		    break;
+	    case kTfLiteBool:
+		    ov_element_type = ov::element::boolean;
+		    break;
+	    case kTfLiteInt16:
+		    ov_element_type = ov::element::i16;
+		    break;
+	    case kTfLiteInt8:
+		    ov_element_type = ov::element::i8;
+		    break;
+	    case kTfLiteFloat16:
+		    ov_element_type = ov::element::f16;
+		    break;
+	    case kTfLiteFloat64:
+		    ov_element_type = ov::element::f64;
+		    break;
+	    case kTfLiteUInt64:
+		    ov_element_type = ov::element::u64;
+		    break;
+	    case kTfLiteUInt32:
+		    ov_element_type = ov::element::u32;
+		    break;
+	    case kTfLiteUInt16:
+		    ov_element_type = ov::element::u16;
+		    break;
+	    case kTfLiteInt4:
+		    ov_element_type = ov::element::i4;
+		    break;
+            default:
+		    TFLITE_LOG(ERROR) << "Element type not supported\n";
+		    return kTfLiteError;
+        }
+
         auto const_node = std::make_shared<ov::opset8::Constant>(
-            ov::element::f32, ov::Shape(dims.begin(), dims.end()), data);
+            ov_element_type, ov::Shape(dims.begin(), dims.end()), data);
         if (const_node == NULL) {
             TFLITE_LOG(INFO) << "Error in creating const node\n";
             return kTfLiteError;
