@@ -138,6 +138,10 @@ bool OpenVINODelegate::CheckNodeSupportByOpenVINO(const TfLiteRegistrationExtern
         case kTfLiteBuiltinMaxPool2d: {
            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}});
         }
+        case kTfLiteBuiltinMean: {
+            return CheckDataTypeSupported(context, node, {{kTfLiteFloat32}}) &&
+                   CheckDims(context, node, {{4}, {1}});
+        }
         default:
             return false;
     }

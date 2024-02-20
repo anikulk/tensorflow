@@ -110,7 +110,6 @@ protected:
     TfLiteStatus GetTensorType(TfLiteOpaqueTensor *t, ov::element::Type *ov_element_type) {
         
         TfLiteType tensor_type = TfLiteOpaqueTensorType(t);
-        ov::element::Type ov_element_type;
         switch (tensor_type) {
             case kTfLiteFloat32:
                    *ov_element_type = ov::element::f32;
@@ -158,7 +157,7 @@ protected:
         return kTfLiteOk;
     }
 
-    void* GetTensorDataPtr(int index, unsigned int *size) {
+    void* GetTensorDataPtrAndSize(int index, unsigned int *size) {
         auto opaque_tensor = TfLiteOpaqueContextGetOpaqueTensor(context_, index);
         void* tensor_data = TfLiteOpaqueTensorData(opaque_tensor);
         ov::element::Type ov_element_type;

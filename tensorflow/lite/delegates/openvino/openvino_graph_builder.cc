@@ -78,6 +78,9 @@ std::shared_ptr<OperationsBase> OpenVINOGraphBuilder::CreateOpClass(
         case kTfLiteBuiltinMaxPool2d: {
             return std::make_shared<MaxPool2D>(operationIndex);
         }
+        case kTfLiteBuiltinMean: {
+            return std::make_shared<Mean>(operationIndex);
+        }
         default:
             return nullptr;
     }

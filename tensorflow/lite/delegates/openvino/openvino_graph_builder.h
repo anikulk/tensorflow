@@ -17,6 +17,7 @@
 #include "tensorflow/lite/delegates/openvino/operations/include/hardswish.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/logistic.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/maxpool2d.h"
+#include "tensorflow/lite/delegates/openvino/operations/include/mean.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/mul.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu.h"
 #include "tensorflow/lite/delegates/openvino/operations/include/relu6.h"
