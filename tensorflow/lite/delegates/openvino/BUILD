@@ -95,7 +95,20 @@ cc_library(
         "//tensorflow/lite/kernels/internal:tensor",
         "//tensorflow/lite/c:c_api_experimental",
         "//tensorflow/lite/delegates/utils:simple_opaque_delegate",
+        "//tensorflow/lite/kernels:builtin_ops",
         "@intel_openvino//:openvino",
+    ],
+)
+
+cc_test(
+    name = "openvino_delegate_test",
+    srcs = ["openvino_delegate_test.cc"],
+    linkopts = select({
+        "//conditions:default": [],
+    }),
+    deps = [
+        ":openvino_delegate",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 

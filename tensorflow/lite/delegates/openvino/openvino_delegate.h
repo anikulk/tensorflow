@@ -55,16 +55,6 @@ public:
         if (options == nullptr) options_ = TfLiteOpenVINODelegateOptionsDefault();
     }
 
-    bool CheckInputsType(const int tensor_id, const TfLiteOpaqueContext* context,
-                         TfLiteType expected_type) const;
-    bool CheckDataTypeSupported(const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
-                                std::vector<std::vector<TfLiteType>> supported_types) const;
-    bool CheckDims(const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
-                   std::vector<std::vector<int>> dims_size) const;
-    bool CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration,
-                                    const TfLiteOpaqueNode* node,
-                                    TfLiteOpaqueContext* context) const;
-
     bool IsNodeSupportedByDelegate(const TfLiteRegistrationExternal* registration,
                                    const TfLiteOpaqueNode* node,
                                    TfLiteOpaqueContext* context) const override;
@@ -75,7 +65,17 @@ public:
 
     std::unique_ptr<SimpleOpaqueDelegateKernelInterface> CreateDelegateKernelInterface() override;
 
-private:
+
+    TfLiteStatus CheckInputsType(const TfLiteOpaqueTensor* opaque_tensor,
+                         TfLiteType expected_type, bool& is_supported) const;
+    TfLiteStatus CheckDataTypeSupported(const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
+                                std::vector<std::vector<TfLiteType>> supported_types, bool& is_supported) const;
+    TfLiteStatus CheckDims(const TfLiteOpaqueContext* context, const TfLiteOpaqueNode* node,
+                   std::vector<std::vector<int>> dims_size, bool& is_supported) const;
+    TfLiteStatus CheckNodeSupportByOpenVINO(const TfLiteRegistrationExternal* registration,
+                                    const TfLiteOpaqueNode* node,
+                                    TfLiteOpaqueContext* context, bool& is_supported) const;
+    private:
     TfLiteOpenVINODelegateOptions options_;
 };
 }  // namespace openvinodelegate
